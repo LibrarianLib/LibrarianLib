@@ -23,6 +23,7 @@ import net.minecraft.world.World
 import net.minecraftforge.fml.network.NetworkHooks
 
 class TestEntity(val config: TestEntityConfig, world: World): Entity(config.also { configHolder = it }.type, world) {
+    var state: Any? = config.stateFactory(this)
 
     init {
         canUpdate(true)

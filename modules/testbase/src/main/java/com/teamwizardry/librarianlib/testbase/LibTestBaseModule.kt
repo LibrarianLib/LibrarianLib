@@ -5,11 +5,9 @@ import com.teamwizardry.librarianlib.core.util.DistinctColors
 import com.teamwizardry.librarianlib.core.util.kotlin.translationKey
 import com.teamwizardry.librarianlib.testbase.objects.TestBlock
 import com.teamwizardry.librarianlib.testbase.objects.TestEntity
-import com.teamwizardry.librarianlib.testbase.objects.TestEntityRenderer
+import com.teamwizardry.librarianlib.testbase.objects.TestEntityDelegateRenderer
 import com.teamwizardry.librarianlib.testbase.objects.TestItem
-import com.teamwizardry.librarianlib.testbase.objects.TestItemConfig
 import com.teamwizardry.librarianlib.virtualresources.VirtualResources
-import net.minecraft.block.Block
 import net.minecraft.client.renderer.color.IItemColor
 import net.minecraft.item.Item
 import net.minecraft.util.ResourceLocation
@@ -40,7 +38,7 @@ class LibTestBaseModule : LibrarianLibModule("testbase", logger) {
     }
 
     override fun clientSetup(event: FMLClientSetupEvent) {
-        RenderingRegistry.registerEntityRenderingHandler(TestEntity::class.java) { TestEntityRenderer(it) }
+        RenderingRegistry.registerEntityRenderingHandler(TestEntity::class.java) { TestEntityDelegateRenderer(it) }
         VirtualResources.client.add(ResourceLocation(modid, "lang/en_us.json")) {
             val keys = languageKeys()
             return@add "{\n" + keys.map {

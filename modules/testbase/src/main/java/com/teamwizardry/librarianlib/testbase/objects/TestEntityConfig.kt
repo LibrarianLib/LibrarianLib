@@ -1,8 +1,17 @@
 package com.teamwizardry.librarianlib.testbase.objects
 
+import com.mojang.blaze3d.platform.GlStateManager
+import com.teamwizardry.librarianlib.core.util.SidedConsumer
 import com.teamwizardry.librarianlib.core.util.SidedFunction
 import com.teamwizardry.librarianlib.core.util.SidedSupplier
+import com.teamwizardry.librarianlib.core.util.kotlin.color
+import com.teamwizardry.librarianlib.core.util.kotlin.pos
 import com.teamwizardry.librarianlib.core.util.kotlin.threadLocal
+import com.teamwizardry.librarianlib.math.times
+import net.minecraft.client.renderer.Tessellator
+import net.minecraft.client.renderer.entity.EntityRenderer
+import net.minecraft.client.renderer.entity.EntityRendererManager
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityClassification
 import net.minecraft.entity.EntityType
@@ -22,6 +31,8 @@ import net.minecraft.util.math.Rotations
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.text.ITextComponent
 import net.minecraft.world.World
+import org.lwjgl.opengl.GL11
+import java.awt.Color
 import kotlin.reflect.KProperty
 
 class TestEntityConfig(val id: String, val name: String): TestConfig() {
@@ -42,6 +53,34 @@ class TestEntityConfig(val id: String, val name: String): TestConfig() {
     var clientFactory: SidedFunction.Client<World, TestEntity> = SidedFunction.Client { world ->
         TestEntity(this, world)
     }
+    var renderer: TestEntityRenderer = object: TestEntityRenderer {
+        override fun render(entity: TestEntity, partialTicks: Float) {
+            EntityRenderer.renderOffsetAABB(entity.relativeBoundingBox, 0.0, 0.0, 0.0)
+
+            GlStateManager.disableTexture()
+            GlStateManager.disableLighting()
+            GlStateManager.lineWidth(2f)
+
+            val color = Color.BLUE
+
+            val tessellator = Tessellator.getInstance()
+            val vb = tessellator.buffer
+            vb.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR)
+
+            vb.pos(0, 0, 0).color(color).endVertex()
+            vb.pos(entity.getLook(partialTicks) * entity.config.lookLength).color(color).endVertex()
+
+            tessellator.draw()
+
+            GlStateManager.lineWidth(1f)
+            GlStateManager.enableTexture()
+            GlStateManager.enableLighting()
+        }
+    }
+    /**
+     * Creates the initial temporary state for an entity.
+     */
+    var stateFactory: (TestEntity) -> Any? = { null }
 
     val typeBuilder = EntityType.Builder.create<TestEntity>({ _, world ->
         serverFactory(world)
