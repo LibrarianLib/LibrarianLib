@@ -1,0 +1,13 @@
+# Blender MTL File: 'static_textured.blend'
+# Material Count: 1
+
+newmtl librarianlib-models-test:textures/entity/static_texture.png
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd /Users/code/Documents/mods/modular_liblib/forge/modules/models/src/test/resources/assets/librarianlib-models-test/textures/entity/static_textured.png

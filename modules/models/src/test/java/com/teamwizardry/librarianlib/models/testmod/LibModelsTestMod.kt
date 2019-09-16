@@ -1,5 +1,6 @@
 package com.teamwizardry.librarianlib.models.testmod
 
+import com.teamwizardry.librarianlib.models.testmod.models.SimpleModel
 import com.teamwizardry.librarianlib.models.testmod.models.StaticModel
 import com.teamwizardry.librarianlib.testbase.TestMod
 import com.teamwizardry.librarianlib.testbase.objects.TestEntity
@@ -11,7 +12,8 @@ import org.apache.logging.log4j.LogManager
 @Mod("librarianlib-models-test")
 class LibModelsTestModule: TestMod("models", "Models", logger) {
     val models = listOf<TestModel<*>>(
-        StaticModel
+        SimpleModel("static", "Static model"),
+        SimpleModel("static_textured", "Static textured model")
     )
 
     init {

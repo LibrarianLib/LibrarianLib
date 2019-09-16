@@ -1,6 +1,8 @@
 package com.teamwizardry.librarianlib.core.util.kotlin
 
 import net.minecraft.client.Minecraft
+import net.minecraft.resources.IResource
+import net.minecraft.resources.IResourceManager
 import net.minecraft.util.ResourceLocation
 
 fun String.toRl(): ResourceLocation = ResourceLocation(this)
@@ -10,6 +12,10 @@ fun String.toRl(): ResourceLocation = ResourceLocation(this)
  */
 fun ResourceLocation.translationKey(type: String, suffix: String? = null): String
     = "$type.$namespace.$path${suffix?.let { ".$it" } ?: ""}"
+
+fun IResourceManager.getResourceOrNull(resourceLocation: ResourceLocation): IResource? {
+    return if(this.hasResource(resourceLocation)) this.getResource(resourceLocation) else null
+}
 
 /**
  * True if the current environment is obfuscated

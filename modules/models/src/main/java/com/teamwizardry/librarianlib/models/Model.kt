@@ -1,6 +1,11 @@
 package com.teamwizardry.librarianlib.models
 
 import com.teamwizardry.librarianlib.core.util.Client
+import com.teamwizardry.librarianlib.core.util.kotlin.filename
+import com.teamwizardry.librarianlib.core.util.kotlin.getResourceOrNull
+import com.teamwizardry.librarianlib.core.util.kotlin.resolveSibling
+import de.javagl.obj.Mtl
+import de.javagl.obj.MtlReader
 import de.javagl.obj.Obj
 import de.javagl.obj.ObjReader
 import de.javagl.obj.ObjUtils
@@ -17,15 +22,25 @@ class Model(val location: ResourceLocation) {
     }
 
     val default = ModelInstance(this)
-    var obj: Obj = load()
+    lateinit var obj: Obj
+    lateinit var mtls: MutableMap<String, Mtl>
 
-    private fun load(): Obj {
-        val objLocation = ResourceLocation(location.namespace, location.path + ".obj")
-        if(!Client.resourceManager.hasResource(objLocation))
-            return Objs.create()
-        return ObjUtils.convertToRenderable(
-            ObjReader.read(Client.resourceManager.getResource(objLocation).inputStream)
-        )
+    private fun load() {
+        val objFile = Client.resourceManager.getResourceOrNull(location.resolveSibling(location.filename + ".obj"))
+        if(objFile != null) {
+            obj = objFile.inputStream.use {
+                ObjUtils.convertToRenderable(ObjReader.read(it))
+            }
+            mtls = obj.mtlFileNames.flatMap { mtlName ->
+                val mtlFile = Client.resourceManager.getResourceOrNull(location.resolveSibling(mtlName))
+                mtlFile?.inputStream?.use {
+                    MtlReader.read(it)
+                } ?: emptyList()
+            }.associateBy { it.name }.toMutableMap()
+        } else {
+            obj = Objs.create()
+            mtls = mutableMapOf()
+        }
     }
 
     companion object {
@@ -35,7 +50,7 @@ class Model(val location: ResourceLocation) {
             Client.resourceReloadHandler.register(VanillaResourceType.MODELS) {
                 reloadList.removeIf { model ->
                     model.get()?.also {
-                        it.obj = it.load()
+                        it.load()
                     } == null
                 }
             }

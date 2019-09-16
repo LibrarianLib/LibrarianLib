@@ -26,6 +26,8 @@ optimized away at compile time)
 - A set of [20 visually distinct colors](https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/),
 plus a method to color code objects using their hashcode
 - A `ResourceLocation` extension method to create translation keys (e.g. `item.minecraft.foo`)
+- An `IResourceManager` extension method to get a resource or return null if it doesn't exist
+- A set of `ResourceLocation` extensions to make them easier to manipulate
 #### com.teamwizardry.librarianlib.core
 - Client/server side aware `Runnable`/`Consumer`/`Function`
 - `Client` helper object
