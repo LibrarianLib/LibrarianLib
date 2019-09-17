@@ -48,11 +48,15 @@ class Model(val location: ResourceLocation) {
 
         init {
             Client.resourceReloadHandler.register(VanillaResourceType.MODELS) {
-                reloadList.removeIf { model ->
-                    model.get()?.also {
-                        it.load()
-                    } == null
-                }
+                reloadAll()
+            }
+        }
+
+        internal fun reloadAll() {
+            reloadList.removeIf { model ->
+                model.get()?.also {
+                    it.load()
+                } == null
             }
         }
     }

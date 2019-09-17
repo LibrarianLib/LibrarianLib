@@ -36,6 +36,37 @@ import java.util.Collection;
 public interface WritableObj
 {
     /**
+     * Adds a new armature and sets it as the current armature
+     *
+     * @param name The armature name
+     */
+    void addArmature(String name);
+
+    /**
+     * Adds a new bone to the current armature
+     *
+     * @param parent The parent bone index
+     * @param head The head position
+     * @param tail The tail position
+     * @param name The name of the bone
+     */
+    void addBone(int parent, FloatTuple head, FloatTuple tail, String name);
+
+    /**
+     * Adds a new bone to the current armature
+     *
+     * @param parent The parent bone index
+     * @param headX The x axis of the head position
+     * @param headY The y axis of the head position
+     * @param headZ The z axis of the head position
+     * @param tailX The x axis of the tail position
+     * @param tailY The y axis of the tail position
+     * @param tailZ The z axis of the tail position
+     * @param name The name of the bone
+     */
+    void addBone(int parent, float headX, float headY, float headZ, float tailX, float tailY, float tailZ, String name);
+
+    /**
      * Add the given vertex
      * 
      * @param vertex The vertex to add.
@@ -51,6 +82,15 @@ public interface WritableObj
      * @param z The z-coordinate
      */
     void addVertex(float x, float y, float z);
+
+    /**
+     * Sets the bone weight for the passed vertex
+     *
+     * @param armature The armature index
+     * @param bone The bone index
+     * @param weight The weight
+     */
+    void addWeight(int armature, int bone, float weight);
 
     /**
      * Add the given texture coordinate

@@ -33,11 +33,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
 
 /**
  * A class that may read OBJ data from a stream and
@@ -173,68 +169,90 @@ public class ObjReader
             String identifier = st.nextToken().toLowerCase();
 
             // v: Vertex coordinates
-            if(identifier.equals("v"))
-            {
-                output.addVertex(readFloatTuple(st));
-                vertexCounter++;
-            }
+            switch (identifier) {
+                case "v":
+                    output.addVertex(readFloatTuple(st));
+                    vertexCounter++;
+                    break;
 
-            // vt: Texture coordinates for a vertex
-            else if(identifier.equals("vt"))
-            {
-                output.addTexCoord(readFloatTuple(st));
-                texCoordCounter++;
-            }
+                // vt: Texture coordinates for a vertex
+                case "vt":
+                    output.addTexCoord(readFloatTuple(st));
+                    texCoordCounter++;
+                    break;
 
-            // vn: Vertex normal
-            else if(identifier.equals("vn"))
-            {
-                output.addNormal(readFloatTuple(st));
-                normalCounter++;
-            }
+                // vn: Vertex normal
+                case "vn":
+                    output.addNormal(readFloatTuple(st));
+                    normalCounter++;
+                    break;
 
-            // mtllib: Name of the MTL file
-            else if(identifier.equals("mtllib"))
-            {
-                String s = line.substring(6).trim();
-                //output.setMtlFileNames(readStrings(s));
-                // According to the OBJ specification, the "mtllib" keyword
-                // may be followed by multiple file names, separated with
-                // whitespaces:
-                // "When you assign a material library using the Model
-                //  program, only one map library per .obj file is allowed.
-                //  You can assign multiple libraries using a text editor."
-                // However, to avoid problems with file names that contain
-                // whitespaces, only ONE file name is assumed here:
-                output.setMtlFileNames(Collections.singleton(s));
-            }
+                // mtllib: Name of the MTL file
+                case "mtllib": {
+                    String s = line.substring(6).trim();
+                    //output.setMtlFileNames(readStrings(s));
+                    // According to the OBJ specification, the "mtllib" keyword
+                    // may be followed by multiple file names, separated with
+                    // whitespaces:
+                    // "When you assign a material library using the Model
+                    //  program, only one map library per .obj file is allowed.
+                    //  You can assign multiple libraries using a text editor."
+                    // However, to avoid problems with file names that contain
+                    // whitespaces, only ONE file name is assumed here:
+                    output.setMtlFileNames(Collections.singleton(s));
+                    break;
+                }
 
-            // usemtl: Material groups
-            else if(identifier.equals("usemtl"))
-            {
-                String materialGroupName = line.substring(6).trim();
-                output.setActiveMaterialGroupName(materialGroupName);
-            }
+                // usemtl: Material groups
+                case "usemtl":
+                    String materialGroupName = line.substring(6).trim();
+                    output.setActiveMaterialGroupName(materialGroupName);
+                    break;
 
-            // g: Geometry groups
-            else if(identifier.equals("g"))
-            {
-                String s = line.substring(1).trim();
-                String groupNames[] = readStrings(s);
-                output.setActiveGroupNames(Arrays.asList(groupNames));
-            }
+                // g: Geometry groups
+                case "g": {
+                    String s = line.substring(1).trim();
+                    String groupNames[] = readStrings(s);
+                    output.setActiveGroupNames(Arrays.asList(groupNames));
+                    break;
+                }
 
-            // f: A face definition
-            else if(identifier.equals("f"))
-            {
-                objFaceParser.parse(line);
-                int v[] = objFaceParser.getVertexIndices();
-                int vt[] = objFaceParser.getTexCoordIndices();
-                int vn[] = objFaceParser.getNormalIndices();
-                makeIndicesAbsolute(v, vertexCounter);
-                makeIndicesAbsolute(vt, texCoordCounter);
-                makeIndicesAbsolute(vn, normalCounter);
-                output.addFace(ObjFaces.create(v, vt, vn));
+                // f: A face definition
+                case "f":
+                    objFaceParser.parse(line);
+                    int v[] = objFaceParser.getVertexIndices();
+                    int vt[] = objFaceParser.getTexCoordIndices();
+                    int vn[] = objFaceParser.getNormalIndices();
+                    makeIndicesAbsolute(v, vertexCounter);
+                    makeIndicesAbsolute(vt, texCoordCounter);
+                    makeIndicesAbsolute(vn, normalCounter);
+                    output.addFace(ObjFaces.create(v, vt, vn));
+                    break;
+
+                case "#>":
+                    identifier = st.nextToken().toLowerCase();
+                    switch(identifier) {
+                        case "a":
+                            output.addArmature(line.substring(line.indexOf('a') + 1).trim());
+                            break;
+                        case "b":
+                            String[] tokens = line.split("\\s+", 10);
+                            output.addBone(
+                                    parseInt(tokens[2]) - 1, // start at 2 because first two are "#>" and "b"
+                                    parseFloat(tokens[3]), parseFloat(tokens[4]), parseFloat(tokens[5]),
+                                    parseFloat(tokens[6]), parseFloat(tokens[7]), parseFloat(tokens[8]),
+                                    tokens[9].trim()
+                            );
+                            break;
+                        case "vw":
+                            try {
+                                output.addWeight(parseInt(st.nextToken()) - 1, parseInt(st.nextToken()) - 1, parseFloat(st.nextToken()));
+                            } catch(NoSuchElementException e) {
+                                throw new IOException(e);
+                            }
+                            break;
+                    }
+                    break;
             }
         }
         return output;
@@ -297,18 +315,18 @@ public class ObjReader
     private static FloatTuple readFloatTuple(StringTokenizer st)
         throws IOException
     {
-        float x = parse(st.nextToken());
+        float x = parseFloat(st.nextToken());
         if (st.hasMoreTokens())
         {
-            float y = parse(st.nextToken());
+            float y = parseFloat(st.nextToken());
 
             if (st.hasMoreTokens())
             {
-                float z = parse(st.nextToken());
+                float z = parseFloat(st.nextToken());
 
                 if (st.hasMoreTokens())
                 {
-                    float w = parse(st.nextToken());
+                    float w = parseFloat(st.nextToken());
                     return FloatTuples.create(x,y,z,w);
                 }
                 return FloatTuples.create(x,y,z);
@@ -326,11 +344,32 @@ public class ObjReader
      * @return The float
      * @throws IOException If the string does not contain a valid float value
      */
-    private static float parse(String s) throws IOException
+    private static float parseFloat(String s) throws IOException
     {
         try
         {
             return Float.parseFloat(s);
+        }
+        catch (NumberFormatException e)
+        {
+            throw new IOException(e);
+        }
+    }
+
+
+    /**
+     * Parse an int from the given string, wrapping number format
+     * exceptions into an IOException
+     *
+     * @param s The string
+     * @return The int
+     * @throws IOException If the string does not contain a valid int value
+     */
+    private static int parseInt(String s) throws IOException
+    {
+        try
+        {
+            return Integer.parseInt(s);
         }
         catch (NumberFormatException e)
         {

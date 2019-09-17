@@ -54,7 +54,22 @@ public class AbstractWritableObj implements WritableObj
     {
         // Default constructor
     }
-    
+
+    @Override
+    public void addArmature(String name) {
+        // Empty default implementation
+    }
+
+    @Override
+    public void addBone(int parent, FloatTuple head, FloatTuple tail, String name) {
+        // Empty default implementation
+    }
+
+    @Override
+    public void addBone(int parent, float headX, float headY, float headZ, float tailX, float tailY, float tailZ, String name) {
+        addBone(parent, FloatTuples.create(headX, headY, headZ), FloatTuples.create(tailX, tailY, tailZ), name);
+    }
+
     @Override
     public final void addVertex(float x, float y, float z)
     {
@@ -66,7 +81,12 @@ public class AbstractWritableObj implements WritableObj
     {
         // Empty default implementation
     }
-    
+
+    @Override
+    public void addWeight(int armature, int bone, float weight) {
+        // Empty default implementation
+    }
+
     @Override
     public final void addTexCoord(float x)
     {

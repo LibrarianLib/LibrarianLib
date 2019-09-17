@@ -2,7 +2,7 @@
  * www.javagl.de - Obj
  *
  * Copyright (c) 2008-2015 Marco Hutter - http://www.javagl.de
- * 
+ *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without
@@ -11,10 +11,10 @@
  * copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following
  * conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -29,6 +29,7 @@ package de.javagl.obj;
 
 import java.util.Collection;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -36,15 +37,15 @@ import java.util.function.Consumer;
  * to consumer callbacks. <br>
  * <br>
  * The consumers for the elements of an OBJ are <code>null</code> by default,
- * causing the respective elements to be ignored. The callbacks may be set 
- * individually. For example, in order to print all vertices and faces that 
+ * causing the respective elements to be ignored. The callbacks may be set
+ * individually. For example, in order to print all vertices and faces that
  * are read from an OBJ file, the following may be used:
  * <pre><code>
  * BasicWritableObj obj = new BasicWritableObj();
  * obj.setVertexConsumer(t -&gt; System.out.println(t));
  * obj.setFaceConsumer(t -&gt; System.out.println(t));
  * ObjReader.read(inputStream, obj);
- * </code></pre> 
+ * </code></pre>
  */
 public class BasicWritableObj implements WritableObj
 {
@@ -54,35 +55,50 @@ public class BasicWritableObj implements WritableObj
     private Consumer<? super FloatTuple> vertexConsumer;
 
     /**
+     * The weight consumer
+     */
+    private BiConsumer<? super BoneIndex, Float> weightConsumer;
+
+    /**
+     * The armature consumer
+     */
+    private Consumer<String> armatureConsumer;
+
+    /**
+     * The bone consumer
+     */
+    private Consumer<? super Bone> boneConsumer;
+
+    /**
      * The texture coordinate consumer
      */
     private Consumer<? super FloatTuple> texCoordConsumer;
-    
+
     /**
      * The normal consumer
      */
     private Consumer<? super FloatTuple> normalConsumer;
-    
+
     /**
      * The face consumer
      */
     private Consumer<? super ObjFace> faceConsumer;
-    
+
     /**
      * The consumer for group names
      */
     private Consumer<? super Collection<? extends String>> groupNamesConsumer;
-    
+
     /**
      * The consumer for material group names
      */
     private Consumer<? super String> materialGroupNameConsumer;
-    
+
     /**
      * The consumer for MTL file names
      */
     private Consumer<? super Collection<? extends String>> mtlFileNamesConsumer;
-    
+
     /**
      * Default constructor
      */
@@ -90,10 +106,10 @@ public class BasicWritableObj implements WritableObj
     {
         // Default constructor
     }
-    
+
     /**
      * Set the vertex consumer
-     * 
+     *
      * @param vertexConsumer The consumer
      */
     public void setVertexConsumer(Consumer<? super FloatTuple> vertexConsumer)
@@ -102,8 +118,18 @@ public class BasicWritableObj implements WritableObj
     }
 
     /**
+     * Set the weight consumer
+     *
+     * @param weightConsumer The consumer
+     */
+    public void setWeightConsumer(BiConsumer<? super BoneIndex, Float> weightConsumer)
+    {
+        this.weightConsumer = weightConsumer;
+    }
+
+    /**
      * Set the texture coordinate consumer
-     * 
+     *
      * @param texCoordConsumer The consumer
      */
     public void setTexCoordConsumer(
@@ -114,7 +140,7 @@ public class BasicWritableObj implements WritableObj
 
     /**
      * Set the normal consumer
-     * 
+     *
      * @param normalConsumer The consumer
      */
     public void setNormalConsumer(Consumer<? super FloatTuple> normalConsumer)
@@ -124,7 +150,7 @@ public class BasicWritableObj implements WritableObj
 
     /**
      * Set the face consumer
-     * 
+     *
      * @param faceConsumer The consumer
      */
     public void setFaceConsumer(Consumer<? super ObjFace> faceConsumer)
@@ -134,7 +160,7 @@ public class BasicWritableObj implements WritableObj
 
     /**
      * Set the group names consumer
-     * 
+     *
      * @param groupNamesConsumer The consumer
      */
     public void setGroupNamesConsumer(
@@ -145,7 +171,7 @@ public class BasicWritableObj implements WritableObj
 
     /**
      * Set the material group name consumer
-     * 
+     *
      * @param materialGroupNameConsumer The consumer
      */
     public void setMaterialGroupNameConsumer(
@@ -156,7 +182,7 @@ public class BasicWritableObj implements WritableObj
 
     /**
      * Set the MTL file names consumer
-     * 
+     *
      * @param mtlFileNamesConsumer The consumer
      */
     public void setMtlFileNamesConsumer(
@@ -165,7 +191,27 @@ public class BasicWritableObj implements WritableObj
         this.mtlFileNamesConsumer = mtlFileNamesConsumer;
     }
 
-    
+    @Override
+    public void addArmature(String name) {
+        if(armatureConsumer != null) {
+            armatureConsumer.accept(name);
+        }
+    }
+
+    @Override
+    public void addBone(int parent, FloatTuple head, FloatTuple tail, String name) {
+        if (boneConsumer != null) {
+            boneConsumer.accept(Bones.create(parent, name, head, tail));
+        }
+    }
+
+    @Override
+    public void addBone(int parent, float headX, float headY, float headZ, float tailX, float tailY, float tailZ, String name) {
+        if (boneConsumer != null) {
+            boneConsumer.accept(Bones.create(parent, name, headX, headY, headZ, tailX, tailY, tailZ));
+        }
+    }
+
     @Override
     public final void addVertex(FloatTuple vertex)
     {
@@ -174,13 +220,22 @@ public class BasicWritableObj implements WritableObj
             vertexConsumer.accept(vertex);
         }
     }
-    
+
     @Override
     public final void addVertex(float x, float y, float z)
     {
         addVertex(FloatTuples.create(x, y, z));
     }
-    
+
+    @Override
+    public final void addWeight(int armature, int bone, float weight)
+    {
+        if (weightConsumer != null)
+        {
+            weightConsumer.accept(BoneIndexes.create(armature, bone), weight);
+        }
+    }
+
     @Override
     public final void addTexCoord(FloatTuple texCoord)
     {
@@ -189,25 +244,25 @@ public class BasicWritableObj implements WritableObj
             texCoordConsumer.accept(texCoord);
         }
     }
-    
+
     @Override
     public final void addTexCoord(float x)
     {
         addTexCoord(FloatTuples.create(x));
     }
-    
+
     @Override
     public final void addTexCoord(float x, float y)
     {
         addTexCoord(FloatTuples.create(x, y));
     }
-    
+
     @Override
     public final void addTexCoord(float x, float y, float z)
     {
         addTexCoord(FloatTuples.create(x, y, z));
     }
-    
+
 
     @Override
     public final void addNormal(FloatTuple normal)
@@ -223,7 +278,7 @@ public class BasicWritableObj implements WritableObj
     {
         addNormal(FloatTuples.create(x, y, z));
     }
-    
+
     @Override
     public final void setActiveGroupNames(
         Collection<? extends String> groupNames)
@@ -233,8 +288,8 @@ public class BasicWritableObj implements WritableObj
             groupNamesConsumer.accept(groupNames);
         }
     }
-    
-    
+
+
     @Override
     public final void setActiveMaterialGroupName(String materialGroupName)
     {
@@ -243,7 +298,7 @@ public class BasicWritableObj implements WritableObj
             materialGroupNameConsumer.accept(materialGroupName);
         }
     }
-    
+
     @Override
     public final void addFace(ObjFace face)
     {
@@ -252,7 +307,7 @@ public class BasicWritableObj implements WritableObj
             faceConsumer.accept(face);
         }
     }
-    
+
     @Override
     public final void addFace(int ... v)
     {
@@ -276,7 +331,7 @@ public class BasicWritableObj implements WritableObj
     {
         addFace(v, v, v);
     }
-    
+
     @Override
     public final void addFace(int[] v, int[] vt, int[] vn)
     {
@@ -286,7 +341,7 @@ public class BasicWritableObj implements WritableObj
             addFace(ObjFaces.create(v, vt, vn));
         }
     }
-    
+
 
     @Override
     public final void setMtlFileNames(Collection<? extends String> mtlFileNames)
@@ -297,6 +352,6 @@ public class BasicWritableObj implements WritableObj
         }
     }
 
-    
-    
+
+
 }

@@ -47,6 +47,25 @@ import java.util.Set;
 public interface ReadableObj
 {
     /**
+     * Returns the number of armatures in the Obj.
+     *
+     * @return The number of armatures in the Obj.
+     */
+    int getNumArmatures();
+
+    /**
+     * Returns the armature with the given index. Note that the index
+     * is <b>0</b>-based, in contrast to the <b>1</b>-based indices of the
+     * actual OBJ file.
+     *
+     * @param index The index of the armature
+     * @return The armature with the given index
+     * @throws IndexOutOfBoundsException If the index is negative or not
+     * smaller than {@link #getNumArmatures()}
+     */
+    Armature getArmature(int index);
+
+    /**
      * Returns the number of vertices in the Obj.
      * 
      * @return The number of vertices in the Obj.
@@ -65,7 +84,19 @@ public interface ReadableObj
      */
     FloatTuple getVertex(int index);
 
-    
+    /**
+     * Returns the weights of a vertex with the given index. Note that
+     * the index is <b>0</b>-based, in contrast to the <b>1</b>-based
+     * indices of the actual OBJ file.
+     *
+     * @param index The index of the vertex
+     * @return The weights for the vertex with the given index
+     * @throws IndexOutOfBoundsException If the index is negative or not
+     * smaller than {@link #getNumVertices()}
+     */
+    @Nullable
+    VertexWeightSet getWeights(int index);
+
     /**
      * Returns the number of texture coordinates in the Obj.
      * 

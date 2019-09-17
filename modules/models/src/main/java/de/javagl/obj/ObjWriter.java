@@ -88,6 +88,14 @@ public class ObjWriter
             FloatTuple vertex = input.getVertex(i);
             writer.write(
                 "v "+FloatTuples.createString(vertex) + "\n");
+            VertexWeightSet weights = input.getWeights(i);
+            if(weights != null) {
+                for (int j = 0; j < weights.getNumWeights(); j++) {
+                    writer.write(
+                        "#> vw " + BoneIndexes.createString(weights.getBoneIndex(j)) + " " + weights.getWeight(j) + "\n"
+                    );
+                }
+            }
         }
         for(int i = 0; i < input.getNumTexCoords(); i++)
         {

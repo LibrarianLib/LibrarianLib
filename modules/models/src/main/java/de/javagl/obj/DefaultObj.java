@@ -47,10 +47,20 @@ import java.util.Set;
 final class DefaultObj implements Obj
 {
     /**
+     * The armatures in this Obj
+     */
+    private final List<MutableArmature> armatures;
+
+    /**
      * The vertices in this Obj
      */
     private final List<FloatTuple> vertices;
-    
+
+    /**
+     * The weights of the vertices in this Obj
+     */
+    private final List<MutableVertexWeightSet> weights;
+
     /**
      * The texture coordinates in this Obj.
      */
@@ -145,7 +155,9 @@ final class DefaultObj implements Obj
      */
     DefaultObj()
     {
+        armatures = new ArrayList<MutableArmature>();
         vertices = new ArrayList<FloatTuple>();
+        weights = new ArrayList<MutableVertexWeightSet>();
         normals = new ArrayList<FloatTuple>();
         texCoords = new ArrayList<FloatTuple>();
         faces = new ArrayList<ObjFace>();
@@ -163,6 +175,15 @@ final class DefaultObj implements Obj
         getGroupInternal("default");
     }
 
+    @Override
+    public int getNumArmatures() {
+        return armatures.size();
+    }
+
+    @Override
+    public Armature getArmature(int index) {
+        return armatures.get(index);
+    }
 
     @Override
     public int getNumVertices()
@@ -174,6 +195,12 @@ final class DefaultObj implements Obj
     public FloatTuple getVertex(int index)
     {
         return vertices.get(index);
+    }
+
+    @Override
+    @Nullable
+    public VertexWeightSet getWeights(int index) {
+        return weights.get(index);
     }
 
     @Override
@@ -269,13 +296,27 @@ final class DefaultObj implements Obj
     }
 
 
-    
-    
+    @Override
+    public void addArmature(String name) {
+        armatures.add(Armatures.createMutable(name));
+    }
+
+    @Override
+    public void addBone(int parent, FloatTuple head, FloatTuple tail, String name) {
+        armatures.get(armatures.size()-1).addBone(Bones.create(parent, name, head, tail));
+    }
+
+    @Override
+    public void addBone(int parent, float headX, float headY, float headZ, float tailX, float tailY, float tailZ, String name) {
+        addBone(parent, FloatTuples.create(headX, headY, headZ), FloatTuples.create(tailX, tailY, tailZ), name);
+    }
+
     @Override
     public void addVertex(FloatTuple vertex)
     {
         Objects.requireNonNull(vertex, "The vertex is null");
         vertices.add(vertex);
+        weights.add(null);
         if (mRect3D == null) {
             mRect3D = new Rect3D(vertex.getX(), vertex.getX(), vertex.getY(), vertex.getY(), vertex.getZ(),
                     vertex.getZ());
@@ -288,8 +329,19 @@ final class DefaultObj implements Obj
     public void addVertex(float x, float y, float z)
     {
         vertices.add(new DefaultFloatTuple(x, y, z));
+        weights.add(null);
     }
-    
+
+    @Override
+    public void addWeight(int armature, int bone, float weight) {
+        MutableVertexWeightSet weightSet = weights.get(weights.size() - 1);
+        if(weightSet == null) {
+            weightSet = VertexWeightSets.createMutable();
+            weights.set(weights.size() - 1, weightSet);
+        }
+        weightSet.addWeight(BoneIndexes.create(armature, bone), weight);
+    }
+
     @Override
     public void addTexCoord(FloatTuple texCoord)
     {
