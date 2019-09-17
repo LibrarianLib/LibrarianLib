@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DefaultVertexWeightSet implements MutableVertexWeightSet {
-    private List<BoneIndex> indices;
+    private List<ObjBoneIndex> indices;
     private List<Float> weights;
 
     public DefaultVertexWeightSet() {
@@ -14,7 +14,7 @@ public class DefaultVertexWeightSet implements MutableVertexWeightSet {
         weights = new ArrayList<>();
     }
 
-    public DefaultVertexWeightSet(List<BoneIndex> indices, List<Float> weights) {
+    public DefaultVertexWeightSet(List<ObjBoneIndex> indices, List<Float> weights) {
         if(indices.size() != weights.size())
             throw new IllegalArgumentException("indices and weights lists are different sizes");
         this.indices = indices;
@@ -37,7 +37,7 @@ public class DefaultVertexWeightSet implements MutableVertexWeightSet {
 
     @NotNull
     @Override
-    public BoneIndex getBoneIndex(int number) {
+    public ObjBoneIndex getBoneIndex(int number) {
         return indices.get(number);
     }
 
@@ -47,7 +47,7 @@ public class DefaultVertexWeightSet implements MutableVertexWeightSet {
     }
 
     @Override
-    public void addWeight(@NotNull BoneIndex bone, float weight) {
+    public void addWeight(@NotNull ObjBoneIndex bone, float weight) {
         indices.add(bone);
         weights.add(weight);
     }

@@ -63,7 +63,7 @@ public interface ReadableObj
      * @throws IndexOutOfBoundsException If the index is negative or not
      * smaller than {@link #getNumArmatures()}
      */
-    Armature getArmature(int index);
+    ObjArmature getArmature(int index);
 
     /**
      * Returns the number of vertices in the Obj.

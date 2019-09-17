@@ -51,7 +51,7 @@ public interface VertexWeightSet
      * or not smaller than {@link #getNumWeights()}
      */
     @NotNull
-    BoneIndex getBoneIndex(int number);
+    ObjBoneIndex getBoneIndex(int number);
 
     /**
      * Returns the weight with the given number

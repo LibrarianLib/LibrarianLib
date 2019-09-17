@@ -27,31 +27,31 @@
 package de.javagl.obj;
 
 /**
- * Methods to create {@link BoneIndex} instances
+ * Methods to create {@link ObjBoneIndex} instances
  */
-public class BoneIndexes
+public class ObjBoneIndexes
 {
     /**
-     * Create a copy of the given {@link BoneIndex}
+     * Create a copy of the given {@link ObjBoneIndex}
      *
      * @param other The other index
-     * @return The {@link BoneIndex}
+     * @return The {@link ObjBoneIndex}
      */
-    public static BoneIndex copy(BoneIndex other)
+    public static ObjBoneIndex copy(ObjBoneIndex other)
     {
-        return new DefaultBoneIndex(other);
+        return new DefaultObjBoneIndex(other);
     }
 
     /**
-     * Create a new {@link BoneIndex} with the given parameters
+     * Create a new {@link ObjBoneIndex} with the given parameters
      *
      * @param armature The armature index
      * @param bone The bone index
-     * @return The {@link BoneIndex}
+     * @return The {@link ObjBoneIndex}
      */
-    public static BoneIndex create(int armature, int bone)
+    public static ObjBoneIndex create(int armature, int bone)
     {
-        return new DefaultBoneIndex(armature, bone);
+        return new DefaultObjBoneIndex(armature, bone);
     }
 
 
@@ -62,7 +62,7 @@ public class BoneIndexes
      * @param index The index
      * @return The string for the given index
      */
-    public static String createString(BoneIndex index)
+    public static String createString(ObjBoneIndex index)
     {
         StringBuilder sb = new StringBuilder();
         sb.append(index.getArmature() + 1);
@@ -74,7 +74,7 @@ public class BoneIndexes
     /**
      * Private constructor to prevent instantiation
      */
-    private BoneIndexes()
+    private ObjBoneIndexes()
     {
         // Private constructor to prevent instantiation
     }

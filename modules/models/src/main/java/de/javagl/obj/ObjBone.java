@@ -1,7 +1,7 @@
 package de.javagl.obj;
 
 // b <parent index> <head x> <head y> <head z> <tail x> <tail y> <tail z> <name>
-public interface Bone {
+public interface ObjBone {
 
     /**
      * Gets the parent bone's index (zero-indexed)

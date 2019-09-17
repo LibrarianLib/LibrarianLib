@@ -41,5 +41,5 @@ public interface MutableVertexWeightSet extends VertexWeightSet
      * @param bone The bone the weight relates to
      * @param weight The weight of the relationship
      */
-    void addWeight(@NotNull BoneIndex bone, float weight);
+    void addWeight(@NotNull ObjBoneIndex bone, float weight);
 }

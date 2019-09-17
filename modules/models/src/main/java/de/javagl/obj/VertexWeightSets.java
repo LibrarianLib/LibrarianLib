@@ -30,7 +30,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Methods to create {@link VertexWeightSet} instances
@@ -55,7 +54,7 @@ public class VertexWeightSets
      * @param weights The weights
      * @return The {@link VertexWeightSet}
      */
-    public static VertexWeightSet create(List<BoneIndex> indices, List<Float> weights)
+    public static VertexWeightSet create(List<ObjBoneIndex> indices, List<Float> weights)
     {
         return new DefaultVertexWeightSet(indices, weights);
     }
@@ -79,7 +78,7 @@ public class VertexWeightSets
     public static void addToObj(int armatureOffset, WritableObj obj, @Nullable VertexWeightSet weights) {
         if(weights != null) {
             for (int i = 0; i < weights.getNumWeights(); i++) {
-                BoneIndex index = weights.getBoneIndex(i);
+                ObjBoneIndex index = weights.getBoneIndex(i);
                 obj.addWeight(index.getArmature() + armatureOffset, index.getBone(), weights.getWeight(i));
             }
         }

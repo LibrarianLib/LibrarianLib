@@ -1,15 +1,15 @@
 package de.javagl.obj;
 
-public class DefaultBoneIndex implements BoneIndex {
+public class DefaultObjBoneIndex implements ObjBoneIndex {
     private int armature;
     private int bone;
 
-    public DefaultBoneIndex(int armature, int bone) {
+    public DefaultObjBoneIndex(int armature, int bone) {
         this.armature = armature;
         this.bone = bone;
     }
 
-    public DefaultBoneIndex(BoneIndex other) {
+    public DefaultObjBoneIndex(ObjBoneIndex other) {
         this.armature = other.getArmature();
         this.bone = other.getBone();
     }

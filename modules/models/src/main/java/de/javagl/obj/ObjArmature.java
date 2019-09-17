@@ -2,7 +2,7 @@ package de.javagl.obj;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface Armature {
+public interface ObjArmature {
     /**
      * Returns the name of the armature
      */
@@ -24,5 +24,5 @@ public interface Armature {
      * or not smaller than {@link #getNumBones()}
      */
     @NotNull
-    Bone getBone(int number);
+    ObjBone getBone(int number);
 }

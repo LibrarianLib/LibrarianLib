@@ -1,19 +1,19 @@
 package de.javagl.obj;
 
-public class DefaultBone implements Bone {
+public class DefaultObjBone implements ObjBone {
     private int parent;
     private String name;
     private FloatTuple head;
     private FloatTuple tail;
 
-    public DefaultBone(int parent, String name, FloatTuple head, FloatTuple tail) {
+    public DefaultObjBone(int parent, String name, FloatTuple head, FloatTuple tail) {
         this.parent = parent;
         this.name = name;
         this.head = head;
         this.tail = tail;
     }
 
-    public DefaultBone(Bone other) {
+    public DefaultObjBone(ObjBone other) {
         this.parent = other.getParent();
         this.name = other.getName();
         this.head = FloatTuples.copy(other.getHead());

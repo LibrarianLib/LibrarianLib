@@ -49,7 +49,7 @@ final class DefaultObj implements Obj
     /**
      * The armatures in this Obj
      */
-    private final List<MutableArmature> armatures;
+    private final List<MutableObjArmature> armatures;
 
     /**
      * The vertices in this Obj
@@ -155,7 +155,7 @@ final class DefaultObj implements Obj
      */
     DefaultObj()
     {
-        armatures = new ArrayList<MutableArmature>();
+        armatures = new ArrayList<MutableObjArmature>();
         vertices = new ArrayList<FloatTuple>();
         weights = new ArrayList<MutableVertexWeightSet>();
         normals = new ArrayList<FloatTuple>();
@@ -181,7 +181,7 @@ final class DefaultObj implements Obj
     }
 
     @Override
-    public Armature getArmature(int index) {
+    public ObjArmature getArmature(int index) {
         return armatures.get(index);
     }
 
@@ -298,12 +298,12 @@ final class DefaultObj implements Obj
 
     @Override
     public void addArmature(String name) {
-        armatures.add(Armatures.createMutable(name));
+        armatures.add(ObjArmatures.createMutable(name));
     }
 
     @Override
     public void addBone(int parent, FloatTuple head, FloatTuple tail, String name) {
-        armatures.get(armatures.size()-1).addBone(Bones.create(parent, name, head, tail));
+        armatures.get(armatures.size()-1).addBone(ObjBones.create(parent, name, head, tail));
     }
 
     @Override
@@ -339,7 +339,7 @@ final class DefaultObj implements Obj
             weightSet = VertexWeightSets.createMutable();
             weights.set(weights.size() - 1, weightSet);
         }
-        weightSet.addWeight(BoneIndexes.create(armature, bone), weight);
+        weightSet.addWeight(ObjBoneIndexes.create(armature, bone), weight);
     }
 
     @Override

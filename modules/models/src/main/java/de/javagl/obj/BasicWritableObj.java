@@ -57,7 +57,7 @@ public class BasicWritableObj implements WritableObj
     /**
      * The weight consumer
      */
-    private BiConsumer<? super BoneIndex, Float> weightConsumer;
+    private BiConsumer<? super ObjBoneIndex, Float> weightConsumer;
 
     /**
      * The armature consumer
@@ -67,7 +67,7 @@ public class BasicWritableObj implements WritableObj
     /**
      * The bone consumer
      */
-    private Consumer<? super Bone> boneConsumer;
+    private Consumer<? super ObjBone> boneConsumer;
 
     /**
      * The texture coordinate consumer
@@ -122,7 +122,7 @@ public class BasicWritableObj implements WritableObj
      *
      * @param weightConsumer The consumer
      */
-    public void setWeightConsumer(BiConsumer<? super BoneIndex, Float> weightConsumer)
+    public void setWeightConsumer(BiConsumer<? super ObjBoneIndex, Float> weightConsumer)
     {
         this.weightConsumer = weightConsumer;
     }
@@ -201,14 +201,14 @@ public class BasicWritableObj implements WritableObj
     @Override
     public void addBone(int parent, FloatTuple head, FloatTuple tail, String name) {
         if (boneConsumer != null) {
-            boneConsumer.accept(Bones.create(parent, name, head, tail));
+            boneConsumer.accept(ObjBones.create(parent, name, head, tail));
         }
     }
 
     @Override
     public void addBone(int parent, float headX, float headY, float headZ, float tailX, float tailY, float tailZ, String name) {
         if (boneConsumer != null) {
-            boneConsumer.accept(Bones.create(parent, name, headX, headY, headZ, tailX, tailY, tailZ));
+            boneConsumer.accept(ObjBones.create(parent, name, headX, headY, headZ, tailX, tailY, tailZ));
         }
     }
 
@@ -232,7 +232,7 @@ public class BasicWritableObj implements WritableObj
     {
         if (weightConsumer != null)
         {
-            weightConsumer.accept(BoneIndexes.create(armature, bone), weight);
+            weightConsumer.accept(ObjBoneIndexes.create(armature, bone), weight);
         }
     }
 

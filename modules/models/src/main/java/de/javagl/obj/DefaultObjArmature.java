@@ -5,23 +5,23 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DefaultArmature implements MutableArmature {
+public class DefaultObjArmature implements MutableObjArmature {
     private final String name;
-    private final List<Bone> bones = new ArrayList<>();
+    private final List<ObjBone> bones = new ArrayList<>();
 
-    public DefaultArmature(String name) {
+    public DefaultObjArmature(String name) {
         this.name = name;
     }
 
-    public DefaultArmature(Armature other) {
+    public DefaultObjArmature(ObjArmature other) {
         this.name = other.getName();
         for (int i = 0; i < other.getNumBones(); i++) {
-            bones.add(Bones.copy(other.getBone(i)));
+            bones.add(ObjBones.copy(other.getBone(i)));
         }
     }
 
     @Override
-    public void addBone(Bone bone) {
+    public void addBone(ObjBone bone) {
         bones.add(bone);
     }
 
@@ -37,7 +37,7 @@ public class DefaultArmature implements MutableArmature {
 
     @NotNull
     @Override
-    public Bone getBone(int number) {
+    public ObjBone getBone(int number) {
         return bones.get(number);
     }
 }

@@ -3,7 +3,7 @@ package de.javagl.obj;
 /**
  * Interface for armature/bone ids and weights
  */
-public interface BoneIndex {
+public interface ObjBoneIndex {
     /**
      * Return the armature index (zero-indexed)
      *

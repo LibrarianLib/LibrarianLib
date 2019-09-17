@@ -27,55 +27,52 @@
 package de.javagl.obj;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 /**
- * Methods to create {@link Armature} instances
+ * Methods to create {@link ObjArmature} instances
  */
-public class Armatures
+public class ObjArmatures
 {
     /**
-     * Create a copy of the given {@link Armature}
+     * Create a copy of the given {@link ObjArmature}
      *
      * @param other The other armature
-     * @return The {@link Armature}
+     * @return The {@link ObjArmature}
      */
-    public static Armature copy(@NotNull Armature other)
+    public static ObjArmature copy(@NotNull ObjArmature other)
     {
-        return new DefaultArmature(other);
+        return new DefaultObjArmature(other);
     }
 
     /**
-     * Create a new {@link Armature} with the given name
+     * Create a new {@link ObjArmature} with the given name
      *
      * @param name The name of the armature
-     * @return The {@link Armature}
+     * @return The {@link ObjArmature}
      */
-    public static Armature create(String name)
+    public static ObjArmature create(String name)
     {
-        return new DefaultArmature(name);
+        return new DefaultObjArmature(name);
     }
 
     /**
-     * Create a new {@link MutableArmature}
+     * Create a new {@link MutableObjArmature}
      *
      * @param name The name of the armature
-     * @return The {@link MutableArmature}
+     * @return The {@link MutableObjArmature}
      */
-    public static MutableArmature createMutable(String name)
+    public static MutableObjArmature createMutable(String name)
     {
-        return new DefaultArmature(name);
+        return new DefaultObjArmature(name);
     }
 
 
     public static void addToObj(ReadableObj input, WritableObj output) {
         for (int i = 0; i < input.getNumArmatures(); i++) {
-            Armature armature = input.getArmature(i);
+            ObjArmature armature = input.getArmature(i);
             output.addArmature(armature.getName());
             for (int j = 0; j < armature.getNumBones(); j++) {
-                Bone bone = armature.getBone(j);
+                ObjBone bone = armature.getBone(j);
                 output.addBone(bone.getParent(), bone.getHead(), bone.getTail(), bone.getName());
             }
         }
@@ -83,7 +80,7 @@ public class Armatures
     /**
      * Private constructor to prevent instantiation
      */
-    private Armatures()
+    private ObjArmatures()
     {
         // Private constructor to prevent instantiation
     }

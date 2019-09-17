@@ -200,7 +200,7 @@ public class ObjUtils
         ReadableObj input, ObjGroup inputGroup, 
         List<Integer> vertexIndexMapping, T output)
     {
-        Armatures.addToObj(input, output);
+        ObjArmatures.addToObj(input, output);
 
         output.setMtlFileNames(input.getMtlFileNames());
 
@@ -705,7 +705,7 @@ public class ObjUtils
      */
     private static void addAll(ReadableObj input, WritableObj output)
     {
-        Armatures.addToObj(input, output);
+        ObjArmatures.addToObj(input, output);
         for (int i=0; i<input.getNumVertices(); i++)
         {
             output.addVertex(input.getVertex(i));
@@ -736,7 +736,7 @@ public class ObjUtils
     public static void add(ReadableObj input, Obj output)
     {
         int armatureOffset = output.getNumArmatures();
-        Armatures.addToObj(input, output);
+        ObjArmatures.addToObj(input, output);
 
         int verticesOffset = output.getNumVertices();
         for (int i=0; i<input.getNumVertices(); i++)
@@ -806,7 +806,7 @@ public class ObjUtils
     public static <T extends WritableObj> T makeVertexIndexed(
         ReadableObj input, T output)
     {
-        Armatures.addToObj(input, output);
+        ObjArmatures.addToObj(input, output);
 
         output.setMtlFileNames(input.getMtlFileNames());
         for (int i=0; i<input.getNumVertices(); i++)

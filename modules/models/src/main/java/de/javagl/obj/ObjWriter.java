@@ -92,7 +92,7 @@ public class ObjWriter
             if(weights != null) {
                 for (int j = 0; j < weights.getNumWeights(); j++) {
                     writer.write(
-                        "#> vw " + BoneIndexes.createString(weights.getBoneIndex(j)) + " " + weights.getWeight(j) + "\n"
+                        "#> vw " + ObjBoneIndexes.createString(weights.getBoneIndex(j)) + " " + weights.getWeight(j) + "\n"
                     );
                 }
             }
