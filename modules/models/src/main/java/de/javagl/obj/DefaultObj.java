@@ -186,6 +186,11 @@ final class DefaultObj implements Obj
     }
 
     @Override
+    public void setArmature(int index, ObjArmature armature) {
+        armatures.set(index, ObjArmatures.createMutable(armature));
+    }
+
+    @Override
     public int getNumVertices()
     {
         return vertices.size();
@@ -198,9 +203,19 @@ final class DefaultObj implements Obj
     }
 
     @Override
+    public void setVertex(int index, FloatTuple vertex) {
+        vertices.set(index, vertex);
+    }
+
+    @Override
     @Nullable
     public VertexWeightSet getWeights(int index) {
         return weights.get(index);
+    }
+
+    @Override
+    public void setWeights(int index, VertexWeightSet weights) {
+        this.weights.set(index, VertexWeightSets.createMutable(weights));
     }
 
     @Override
@@ -216,6 +231,11 @@ final class DefaultObj implements Obj
     }
 
     @Override
+    public void setTexCoord(int index, FloatTuple texCoord) {
+        texCoords.set(index, texCoord);
+    }
+
+    @Override
     public int getNumNormals()
     {
         return normals.size();
@@ -227,6 +247,10 @@ final class DefaultObj implements Obj
         return normals.get(index);
     }
 
+    @Override
+    public void setNormal(int index, FloatTuple normal) {
+        normals.set(index, normal);
+    }
 
     @Override
     public int getNumFaces()
@@ -239,7 +263,12 @@ final class DefaultObj implements Obj
     {
         return faces.get(index);
     }
-    
+
+    @Override
+    public void setFace(int index, ObjFace face) {
+        faces.set(index, face);
+    }
+
     @Override
     public Set<String> getActivatedGroupNames(ObjFace face)
     {
@@ -265,9 +294,24 @@ final class DefaultObj implements Obj
     }
 
     @Override
+    public void setGroup(int index, ObjGroup group) {
+        ObjGroup existingGroup = getGroup(index);
+        groups.set(index, group);
+        groupMap.remove(existingGroup.getName());
+        groupMap.put(group.getName(), new DefaultObjGroup(group));
+    }
+
+    @Override
     public ObjGroup getGroup(String name)
     {
         return groupMap.get(name);
+    }
+
+    @Override
+    public void setGroup(String name, ObjGroup group) {
+        ObjGroup existing = getGroup(name);
+        int index = groups.indexOf(existing);
+        setGroup(index, group);
     }
 
     @Override
@@ -283,11 +327,25 @@ final class DefaultObj implements Obj
     }
 
     @Override
+    public void setMaterialGroup(int index, ObjGroup group) {
+        ObjGroup existingGroup = getMaterialGroup(index);
+        materialGroups.set(index, group);
+        materialGroupMap.remove(existingGroup.getName());
+        materialGroupMap.put(group.getName(), new DefaultObjGroup(group));
+    }
+
+    @Override
     public ObjGroup getMaterialGroup(String name)
     {
         return materialGroupMap.get(name);
     }
 
+    @Override
+    public void setMaterialGroup(String name, ObjGroup group) {
+        ObjGroup existing = getMaterialGroup(name);
+        int index = materialGroups.indexOf(existing);
+        setMaterialGroup(index, group);
+    }
 
     @Override
     public List<String> getMtlFileNames()
@@ -295,6 +353,10 @@ final class DefaultObj implements Obj
         return mtlFileNames;
     }
 
+    @Override
+    public void setMtlFileNames(List<String> fileNames) {
+        mtlFileNames = fileNames;
+    }
 
     @Override
     public void addArmature(String name) {
@@ -510,10 +572,6 @@ final class DefaultObj implements Obj
             "#groups=" + groups.size() + "," +
             "#materialGroups=" + materialGroups.size() + "," +
             "mtlFileNames=" + mtlFileNames + "]";
-    }
-
-    void setFace(int index, ObjFace face) {
-        faces.set(index, face);
     }
 
     /**

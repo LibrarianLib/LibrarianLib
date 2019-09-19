@@ -56,6 +56,20 @@ final class DefaultObjGroup implements ObjGroup
         faces = new ArrayList<ObjFace>();
     }
 
+    /**
+     * Creates a copy of the passed ObjGroup
+     *
+     * @param other The ObjGroup to copy
+     */
+    DefaultObjGroup(ObjGroup other)
+    {
+        this.name = other.getName();
+        faces = new ArrayList<ObjFace>();
+        for (int i = 0; i < other.getNumFaces(); i++) {
+            faces.add(other.getFace(i));
+        }
+    }
+
     @Override
     public String getName()
     {

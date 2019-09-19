@@ -16,14 +16,16 @@ import java.lang.ref.WeakReference
 
 class Model(val location: ResourceLocation) {
 
+    lateinit var obj: Obj
+    lateinit var mtls: MutableMap<String, Mtl>
+    private val instances = mutableListOf<WeakReference<ModelInstance>>()
+
     init {
         reloadList.add(WeakReference(this))
         load()
     }
 
     val default = ModelInstance(this)
-    lateinit var obj: Obj
-    lateinit var mtls: MutableMap<String, Mtl>
 
     private fun load() {
         val objFile = Client.resourceManager.getResourceOrNull(location.resolveSibling(location.filename + ".obj"))
@@ -41,6 +43,16 @@ class Model(val location: ResourceLocation) {
             obj = Objs.create()
             mtls = mutableMapOf()
         }
+
+        instances.removeIf { instance ->
+            instance.get()?.also {
+                it.load()
+            } == null
+        }
+    }
+
+    internal fun register(instance: ModelInstance) {
+        instances.add(WeakReference(instance))
     }
 
     companion object {

@@ -34,7 +34,7 @@ package de.javagl.obj;
  * The {@link ObjReader#read(java.io.InputStream)} method may be used to 
  * create an {@link Obj} from an OBJ file. 
  */
-public interface Obj extends ReadableObj, WritableObj
+public interface Obj extends ReadableObj, WritableObj, ModifiableObj
 {
     // No additional methods
 }

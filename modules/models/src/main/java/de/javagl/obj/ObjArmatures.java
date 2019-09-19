@@ -66,6 +66,16 @@ public class ObjArmatures
         return new DefaultObjArmature(name);
     }
 
+    /**
+     * Create a new {@link MutableObjArmature}
+     *
+     * @param other The armature to copy
+     * @return The {@link MutableObjArmature}
+     */
+    public static MutableObjArmature createMutable(@NotNull ObjArmature other)
+    {
+        return new DefaultObjArmature(other);
+    }
 
     public static void addToObj(ReadableObj input, WritableObj output) {
         for (int i = 0; i < input.getNumArmatures(); i++) {

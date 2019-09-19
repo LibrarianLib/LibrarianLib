@@ -13,14 +13,14 @@ import org.lwjgl.opengl.GL11
 object ModelRenderer {
     @JvmStatic
     fun render(instance: ModelInstance) {
-        val model = instance.model
+        val obj = instance.model
 
         val tessellator = Tessellator.getInstance()
         val vb = tessellator.buffer
 
-        for(materialIndex in 0 until model.obj.numMaterialGroups) {
-            val group = model.obj.getMaterialGroup(materialIndex)
-            val mtl = model.mtls[group.name]
+        for(materialIndex in 0 until obj.numMaterialGroups) {
+            val group = obj.getMaterialGroup(materialIndex)
+            val mtl = instance.root.mtls[group.name]
             val textured = mtl?.mapKd != null
 
             if(textured) {
@@ -37,13 +37,13 @@ object ModelRenderer {
                     DefaultVertexFormats.POSITION_NORMAL
             )
 
-            for (faceIndex in 0 until model.obj.numFaces) {
-                val face = model.obj.getFace(faceIndex)
+            for (faceIndex in 0 until group.numFaces) {
+                val face = group.getFace(faceIndex)
                 for (index in 0 until face.numVertices) {
-                    val vertex = model.obj.getVertex(face.getVertexIndex(index))
-                    val normal = model.obj.getNormal(face.getNormalIndex(index))
+                    val vertex = obj.getVertex(face.getVertexIndex(index))
+                    val normal = obj.getNormal(face.getNormalIndex(index))
                     val texCoord = if (textured && face.containsTexCoordIndices())
-                        model.obj.getTexCoord(face.getTexCoordIndex(index))
+                        obj.getTexCoord(face.getTexCoordIndex(index))
                     else
                         FloatTuples.create(0f, 0f)
 

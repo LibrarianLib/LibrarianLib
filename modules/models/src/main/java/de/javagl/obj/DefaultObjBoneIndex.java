@@ -1,5 +1,7 @@
 package de.javagl.obj;
 
+import java.util.Objects;
+
 public class DefaultObjBoneIndex implements ObjBoneIndex {
     private int armature;
     private int bone;
@@ -22,5 +24,15 @@ public class DefaultObjBoneIndex implements ObjBoneIndex {
     @Override
     public int getBone() {
         return 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjBoneIndex.hashCode(this);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return ObjBoneIndex.equals(this, obj);
     }
 }

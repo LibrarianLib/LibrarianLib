@@ -69,6 +69,17 @@ public class VertexWeightSets
         return new DefaultVertexWeightSet();
     }
 
+
+    /**
+     * Create a new {@link MutableVertexWeightSet}
+     *
+     * @param other The weight set to copy
+     * @return The {@link MutableVertexWeightSet}
+     */
+    public static MutableVertexWeightSet createMutable(@NotNull VertexWeightSet other)
+    {
+        return new DefaultVertexWeightSet(other);
+    }
     /**
      * Adds the passed weights to the passed Obj, or does nothing if the passed weights are null.
      *
