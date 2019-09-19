@@ -1,45 +1,47 @@
 package com.teamwizardry.librarianlib.math
 
+import net.minecraft.util.math.AxisAlignedBB
+import net.minecraft.util.math.Vec3d
 import java.util.Collections
 import java.util.IdentityHashMap
 import kotlin.math.max
 import kotlin.math.min
 
-interface CoordinateSpace2D {
+interface CoordinateSpace3D {
     /**
      * The parent coordinate space. All points in this space are transformed relative to its parent.
      */
-    val parentSpace: CoordinateSpace2D?
+    val parentSpace: CoordinateSpace3D?
     /**
      * The "normal" matrix that converts points from this space to the parent space.
      *
      * e.g. if the child space is embedded with an offset (x,y) within its parent, this will be
-     * `Matrix3d().transform(x,y)`
+     * `Matrix4d().transform(x,y)`
      */
-    val matrix: Matrix3d
+    val matrix: Matrix4d
     /**
      * The inverse of [matrix]. Often the best way to get this is to apply inverse transforms instead of directly
      * inverting the matrix. This allows elegant failure state when scaling by zero. Inverting a matrix with zero
      * scale is impossible, but when applying inverse transforms this can be accounted for by ignoring inverse scales.
      */
-    val inverseMatrix: Matrix3d
+    val inverseMatrix: Matrix4d
 
     /**
      * Create a matrix that, when applied to a point in this coordinate space, returns the corresponding point in the
      * [other] coordinate space.
      */
     @JvmDefault
-    fun conversionMatrixTo(other: CoordinateSpace2D): Matrix3d {
-        if(other === this) return Matrix3d.IDENTITY
+    fun conversionMatrixTo(other: CoordinateSpace3D): Matrix4d {
+        if(other === this) return Matrix4d.IDENTITY
         if(other === this.parentSpace) return this.matrix
         if(other.parentSpace === this) return other.inverseMatrix
 
-        val lca = lowestCommonAncestor(other) ?: throw UnrelatedCoordinateSpace2DException(this, other)
+        val lca = lowestCommonAncestor(other) ?: throw UnrelatedCoordinateSpace3DException(this, other)
 
         if(lca === other) return this.matrixToParent(other)
         if(lca === this) return other.matrixFromParent(this)
 
-        val matrix = MutableMatrix3d()
+        val matrix = MutableMatrix4d()
         matrix *= other.matrixFromParent(lca)
         matrix *= this.matrixToParent(lca)
         return matrix
@@ -50,59 +52,77 @@ interface CoordinateSpace2D {
      * in the this coordinate space.
      */
     @JvmDefault
-    fun conversionMatrixFrom(other: CoordinateSpace2D): Matrix3d = other.conversionMatrixTo(this)
+    fun conversionMatrixFrom(other: CoordinateSpace3D): Matrix4d = other.conversionMatrixTo(this)
 
     /**
      * Converts a point in this coordinate space into the corresponding point in the [other] coordinate space
      */
     @JvmDefault
-    fun convertPointTo(point: Vec2d, other: CoordinateSpace2D): Vec2d = conversionMatrixTo(other) * point
+    fun convertPointTo(point: Vec3d, other: CoordinateSpace3D): Vec3d = conversionMatrixTo(other) * point
 
     /**
      * Converts a point in the [other] coordinate space into the corresponding point in this coordinate space
      */
     @JvmDefault
-    fun convertPointFrom(point: Vec2d, other: CoordinateSpace2D): Vec2d = other.convertPointTo(point, this)
+    fun convertPointFrom(point: Vec3d, other: CoordinateSpace3D): Vec3d = other.convertPointTo(point, this)
 
     /**
-     * Converts a rect in this coordinate space to the _**smallest bounding rectangle**_ around it in the [other]
+     * Converts a box in this coordinate space to the _**smallest bounding box**_ around it in the [other]
      * coordinate space
      *
      * ## NOTE!
      *
-     * This operation _**IS NOT REVERSIBLE**_. If there is any rotation returned rect will not equal the passed rect,
+     * This operation _**IS NOT REVERSIBLE**_. If there is any rotation returned box will not equal the passed box,
      * instead it will _contain_ it.
      */
     @JvmDefault
-    fun convertRectTo(rect: Rect2d, other: CoordinateSpace2D): Rect2d {
-        var min = rect.min
-        var max = rect.max
-        var minmax = vec(min.x, max.y)
-        var maxmin = vec(max.x, min.y)
+    fun convertBoxTo(box: AxisAlignedBB, other: CoordinateSpace3D): AxisAlignedBB {
+        val corners = arrayOf(
+            vec(box.minX, box.minY, box.minZ),
+            vec(box.minX, box.maxY, box.minZ),
+            vec(box.minX, box.maxY, box.maxZ),
+            vec(box.minX, box.minY, box.maxZ),
+            vec(box.maxX, box.minY, box.minZ),
+            vec(box.maxX, box.maxY, box.minZ),
+            vec(box.maxX, box.maxY, box.maxZ),
+            vec(box.maxX, box.minY, box.maxZ)
+        )
 
         val matrix = conversionMatrixTo(other)
-        min = matrix * min
-        max = matrix * max
-        minmax = matrix * minmax
-        maxmin = matrix * maxmin
+        for(i in corners.indices) {
+            corners[i] = matrix * corners[i]
+        }
 
-        val pos = Vec2d.zip(min, max, minmax, maxmin) { a, b, c, d -> min(min(a, b), min(c, d)) }
-        val size = Vec2d.zip(min, max, minmax, maxmin) { a, b, c, d -> max(max(a, b), max(c, d)) } - pos
+        var minX = 0.0
+        var minY = 0.0
+        var minZ = 0.0
+        var maxX = 0.0
+        var maxY = 0.0
+        var maxZ = 0.0
 
-        return Rect2d(pos, size)
+        corners.forEach {
+            minX = min(minX, it.x)
+            minY = min(minY, it.y)
+            minZ = min(minZ, it.z)
+            maxX = max(maxX, it.x)
+            maxY = max(maxY, it.y)
+            maxZ = max(maxZ, it.z)
+        }
+
+        return AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ)
     }
 
     /**
-     * Converts a rect in the [other] coordinate space to the _**smallest bounding rectangle**_ around it in this
+     * Converts a box in the [other] coordinate space to the _**smallest bounding box**_ around it in this
      * coordinate space
      *
      * ## NOTE!
      *
-     * This operation _**IS NOT REVERSIBLE**_. If there is any rotation the returned rect will not equal the passed
-     * rect, instead it will _contain_ it.
+     * This operation _**IS NOT REVERSIBLE**_. If there is any rotation the returned box will not equal the passed
+     * box, instead it will _contain_ it.
      */
     @JvmDefault
-    fun convertRectFrom(rect: Rect2d, other: CoordinateSpace2D) = other.convertRectTo(rect, this)
+    fun convertBoxFrom(box: AxisAlignedBB, other: CoordinateSpace3D) = other.convertBoxTo(box, this)
 
     /**
      * Converts a point in this coordinate space into the corresponding point in the parent coordinate space.
@@ -110,7 +130,7 @@ interface CoordinateSpace2D {
      * If this space has no parent, this method returns the original point.
      */
     @JvmDefault
-    fun convertPointToParent(point: Vec2d) = parentSpace?.let { convertPointTo(point, it) } ?: point
+    fun convertPointToParent(point: Vec3d) = parentSpace?.let { convertPointTo(point, it) } ?: point
 
     /**
      * Converts a point in the parent coordinate space into the corresponding point in this coordinate space.
@@ -118,37 +138,37 @@ interface CoordinateSpace2D {
      * If this space has no parent, this method returns the original point.
      */
     @JvmDefault
-    fun convertPointFromParent(point: Vec2d) = parentSpace?.let { convertPointFrom(point, it) } ?: point
+    fun convertPointFromParent(point: Vec3d) = parentSpace?.let { convertPointFrom(point, it) } ?: point
 
     /**
-     * Converts a rect in this coordinate space to the _**smallest bounding rectangle**_ around it in the [other]
+     * Converts a box in this coordinate space to the _**smallest bounding box**_ around it in the [other]
      * coordinate space
      *
-     * If this space has no parent, this method returns the original rect.
+     * If this space has no parent, this method returns the original box.
      *
      * ## NOTE!
      *
-     * This operation _**IS NOT REVERSIBLE**_. If there is any rotation returned rect will not equal the passed rect,
+     * This operation _**IS NOT REVERSIBLE**_. If there is any rotation returned box will not equal the passed box,
      * instead it will _contain_ it.
      */
     @JvmDefault
-    fun convertRectToParent(rect: Rect2d) = parentSpace?.let { convertRectTo(rect, it) } ?: rect
+    fun convertBoxToParent(box: AxisAlignedBB) = parentSpace?.let { convertBoxTo(box, it) } ?: box
 
     /**
-     * Converts a rect in the [other] coordinate space to the _**smallest bounding rectangle**_ around it in this
+     * Converts a box in the [other] coordinate space to the _**smallest bounding box**_ around it in this
      * coordinate space
      *
-     * If this space has no parent, this method returns the original rect.
+     * If this space has no parent, this method returns the original box.
      *
      * ## NOTE!
      *
-     * This operation _**IS NOT REVERSIBLE**_. If there is any rotation the returned rect will not equal the passed
-     * rect, instead it will _contain_ it.
+     * This operation _**IS NOT REVERSIBLE**_. If there is any rotation the returned box will not equal the passed
+     * box, instead it will _contain_ it.
      */
     @JvmDefault
-    fun convertRectFromParent(rect: Rect2d) = parentSpace?.let { convertRectFrom(rect, it) } ?: rect
+    fun convertBoxFromParent(box: AxisAlignedBB) = parentSpace?.let { convertBoxFrom(box, it) } ?: box
 
-    private fun lowestCommonAncestor(other: CoordinateSpace2D): CoordinateSpace2D? {
+    private fun lowestCommonAncestor(other: CoordinateSpace3D): CoordinateSpace3D? {
         // check for straight-line relationships next (doing both in parallel because that minimizes time
         // when the distance is short)
         var thisAncestor = this.parentSpace
@@ -160,7 +180,7 @@ interface CoordinateSpace2D {
             otherAncestor = otherAncestor?.parentSpace
         }
 
-        val ancestors: MutableSet<CoordinateSpace2D> = Collections.newSetFromMap<CoordinateSpace2D>(IdentityHashMap())
+        val ancestors: MutableSet<CoordinateSpace3D> = Collections.newSetFromMap<CoordinateSpace3D>(IdentityHashMap())
         var ancestor = this.parentSpace
         while(ancestor != null) {
             ancestors.add(ancestor)
@@ -178,15 +198,15 @@ interface CoordinateSpace2D {
     /**
      * The matrix to get our coordinates back to [other]'s space. [other] is one of our ancestors
      */
-    private fun matrixToParent(parent: CoordinateSpace2D): MutableMatrix3d {
-        val ancestors = mutableListOf<CoordinateSpace2D>()
-        var space: CoordinateSpace2D = this
+    private fun matrixToParent(parent: CoordinateSpace3D): MutableMatrix4d {
+        val ancestors = mutableListOf<CoordinateSpace3D>()
+        var space: CoordinateSpace3D = this
         while(space !== parent) {
             ancestors.add(space)
             space = space.parentSpace!!
         }
 
-        val matrix = MutableMatrix3d()
+        val matrix = MutableMatrix4d()
         ancestors.reversed().forEach {
             matrix *= it.matrix
         }
@@ -196,15 +216,15 @@ interface CoordinateSpace2D {
     /**
      * The matrix to get [other]'s coordinates down to our space. [other] is one of our ancestors
      */
-    private fun matrixFromParent(other: CoordinateSpace2D): MutableMatrix3d {
-        val ancestors = mutableListOf<CoordinateSpace2D>()
-        var space: CoordinateSpace2D = this
+    private fun matrixFromParent(other: CoordinateSpace3D): MutableMatrix4d {
+        val ancestors = mutableListOf<CoordinateSpace3D>()
+        var space: CoordinateSpace3D = this
         while(space !== other) {
             ancestors.add(space)
             space = space.parentSpace!!
         }
 
-        val matrix = MutableMatrix3d()
+        val matrix = MutableMatrix4d()
         ancestors.forEach {
             matrix *= it.inverseMatrix
         }
@@ -212,4 +232,4 @@ interface CoordinateSpace2D {
     }
 }
 
-class UnrelatedCoordinateSpace2DException(val space1: CoordinateSpace2D, val space2: CoordinateSpace2D): RuntimeException()
+class UnrelatedCoordinateSpace3DException(val space1: CoordinateSpace3D, val space2: CoordinateSpace3D): RuntimeException()

@@ -284,6 +284,23 @@ open class Matrix4d: Cloneable {
         return createRotation(rot).mul(this).toImmutable()
     }
 
+    fun transform(v: Vec3d): Vec3d {
+        return transform(v.getX(), v.getY(), v.getZ())
+    }
+
+    fun transform(x: Float, y: Float, z: Float): Vec3d {
+        return transform(x.toDouble(), y.toDouble(), z.toDouble())
+    }
+
+    fun transform(x: Double, y: Double, z: Double): Vec3d {
+        val w = 1
+        return vec(
+            m00 * x + m01 * y + m02 * z + m03 * w,
+            m10 * x + m11 * y + m12 * z + m13 * w,
+            m20 * x + m21 * y + m22 * z + m23 * w)
+        //  m30 * x + m31 * y + m32 * z + m33 * w // discard w
+    }
+
     open fun floor(): Matrix4d {
         return Matrix4d(
             floor(m00), floor(m01), floor(m02), floor(m03),
@@ -328,6 +345,9 @@ open class Matrix4d: Cloneable {
     open operator fun unaryMinus(): Matrix4d {
         return negate()
     }
+    /** Applies an affine transform on the passed vector. Equivalent to `transform(v.x, v.y, v.z)` */
+    @JvmSynthetic
+    operator fun times(v: Vec3d): Vec3d = transform(v)
 
     open fun transpose(): Matrix4d {
         return Matrix4d(
@@ -453,17 +473,16 @@ open class Matrix4d: Cloneable {
         internal fun createRotation(rot: Quaternion): MutableMatrix4d {
             var rot = rot
             rot = rot.normalize()
-            return temporaryMatrix.set(
-                1 - 2 * rot.y * rot.y - 2 * rot.z * rot.z,
-                2 * rot.x * rot.y - 2 * rot.w * rot.z,
-                2 * rot.x * rot.z + 2 * rot.w * rot.y, 0.0,
-                2 * rot.x * rot.y + 2 * rot.w * rot.z,
-                1 - 2 * rot.x * rot.x - 2 * rot.z * rot.z,
-                2 * rot.y * rot.z - 2 * rot.w * rot.x, 0.0,
-                2 * rot.x * rot.z - 2 * rot.w * rot.y,
-                2 * rot.y * rot.z + 2 * rot.x * rot.w,
-                1 - 2 * rot.x * rot.x - 2 * rot.y * rot.y, 0.0,
+            val x = rot.x
+            val y = rot.y
+            val z = rot.z
+            val w = rot.w
+            temporaryMatrix.set(
+                1 - 2 * y * y - 2 * z * z, 0 + 2 * x * y - 2 * w * z, 0 + 2 * x * z + 2 * w * y, 0.0,
+                0 + 2 * x * y + 2 * w * z, 1 - 2 * x * x - 2 * z * z, 0 + 2 * y * z - 2 * w * x, 0.0,
+                0 + 2 * x * z - 2 * w * y, 0 + 2 * y * z + 2 * x * w, 1 - 2 * x * x - 2 * y * y, 0.0,
                 0.0, 0.0, 0.0, 1.0)
+            return temporaryMatrix
         }
 
         /**
