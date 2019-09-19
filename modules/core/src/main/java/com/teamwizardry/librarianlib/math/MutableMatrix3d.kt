@@ -93,16 +93,22 @@ class MutableMatrix3d: Matrix3d {
         return this
     }
 
+    @Suppress("LocalVariableName")
     override fun mul(m: Matrix3d): MutableMatrix3d {
-        m00 = m00 * m.m00 + m01 * m.m10 + m02 * m.m20
-        m01 = m00 * m.m01 + m01 * m.m11 + m02 * m.m21
-        m02 = m00 * m.m02 + m01 * m.m12 + m02 * m.m22
-        m10 = m10 * m.m00 + m11 * m.m10 + m12 * m.m20
-        m11 = m10 * m.m01 + m11 * m.m11 + m12 * m.m21
-        m12 = m10 * m.m02 + m11 * m.m12 + m12 * m.m22
-        m20 = m20 * m.m00 + m21 * m.m10 + m22 * m.m20
-        m21 = m20 * m.m01 + m21 * m.m11 + m22 * m.m21
-        m22 = m20 * m.m02 + m21 * m.m12 + m22 * m.m22
+        val _m00 = m00 * m.m00 + m01 * m.m10 + m02 * m.m20
+        val _m01 = m00 * m.m01 + m01 * m.m11 + m02 * m.m21
+        val _m02 = m00 * m.m02 + m01 * m.m12 + m02 * m.m22
+        val _m10 = m10 * m.m00 + m11 * m.m10 + m12 * m.m20
+        val _m11 = m10 * m.m01 + m11 * m.m11 + m12 * m.m21
+        val _m12 = m10 * m.m02 + m11 * m.m12 + m12 * m.m22
+        val _m20 = m20 * m.m00 + m21 * m.m10 + m22 * m.m20
+        val _m21 = m20 * m.m01 + m21 * m.m11 + m22 * m.m21
+        val _m22 = m20 * m.m02 + m21 * m.m12 + m22 * m.m22
+
+        this.m00 = _m00; this.m01 = _m01; this.m02 = _m02
+        this.m10 = _m10; this.m11 = _m11; this.m12 = _m12
+        this.m20 = _m20; this.m21 = _m21; this.m22 = _m22
+
         return this
     }
 
@@ -210,22 +216,26 @@ class MutableMatrix3d: Matrix3d {
         return this
     }
 
+    @Suppress("LocalVariableName")
     override fun invert(): MutableMatrix3d {
         val det = determinant()
         if (abs(det) < DBL_EPSILON) {
             throw ArithmeticException("Cannot inverse a matrix with a zero determinant")
         }
-        m00 =  (m11 * m22 - m21 * m12) / det
-        m01 = -(m01 * m22 - m21 * m02) / det
-        m02 =  (m01 * m12 - m02 * m11) / det
+        val _m00 =  (m11 * m22 - m21 * m12) / det
+        val _m01 = -(m01 * m22 - m21 * m02) / det
+        val _m02 =  (m01 * m12 - m02 * m11) / det
+        val _m10 = -(m10 * m22 - m20 * m12) / det
+        val _m11 =  (m00 * m22 - m20 * m02) / det
+        val _m12 = -(m00 * m12 - m10 * m02) / det
+        val _m20 =  (m10 * m21 - m20 * m11) / det
+        val _m21 = -(m00 * m21 - m20 * m01) / det
+        val _m22 =  (m00 * m11 - m01 * m10) / det
 
-        m10 = -(m10 * m22 - m20 * m12) / det
-        m11 =  (m00 * m22 - m20 * m02) / det
-        m12 = -(m00 * m12 - m10 * m02) / det
+        this.m00 = _m00; this.m01 = _m01; this.m02 = _m02
+        this.m10 = _m10; this.m11 = _m11; this.m12 = _m12
+        this.m20 = _m20; this.m21 = _m21; this.m22 = _m22
 
-        m20 =  (m10 * m21 - m20 * m11) / det
-        m21 = -(m00 * m21 - m20 * m01) / det
-        m22 =  (m00 * m11 - m01 * m10) / det
         return this
     }
 
