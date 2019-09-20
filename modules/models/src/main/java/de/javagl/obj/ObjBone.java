@@ -1,6 +1,6 @@
 package de.javagl.obj;
 
-// b <parent index> <head x> <head y> <head z> <tail x> <tail y> <tail z> <name>
+// b <parent index> <x> <y> <z> <rot x> <rot y> <rot z> <rot w> <length> <name>
 public interface ObjBone {
 
     /**
@@ -14,18 +14,18 @@ public interface ObjBone {
     String getName();
 
     /**
-     * Gets the bone's head position.
-     *
-     * The head is the "start" position, i.e. the endpoint often shared with
-     * its parent, or the point closest to the root of the bone hierarchy.
+     * Gets the bone's position.
      */
-    FloatTuple getHead();
+    FloatTuple getPosition();
 
     /**
-     * Gets the bone's tail position.
-     *
-     * The tail is the "end" position, i.e. the endpoint often shared with
-     * its children, or the point farthest from the root of the bone hierarchy.
+     * Gets the bone's rotation quaternion.
      */
-    FloatTuple getTail();
+    FloatTuple getRotation();
+
+    /**
+     * Gets the bone's length.
+     * @return The bone's length.
+     */
+    float getLength();
 }

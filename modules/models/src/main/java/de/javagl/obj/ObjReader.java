@@ -236,12 +236,12 @@ public class ObjReader
                             output.addArmature(line.substring(line.indexOf('a') + 1).trim());
                             break;
                         case "b":
-                            String[] tokens = line.split("\\s+", 10);
+                            String[] tokens = line.split("\\s+", 12);
                             output.addBone(
                                     parseInt(tokens[2]) - 1, // start at 2 because first two are "#>" and "b"
                                     parseFloat(tokens[3]), parseFloat(tokens[4]), parseFloat(tokens[5]),
-                                    parseFloat(tokens[6]), parseFloat(tokens[7]), parseFloat(tokens[8]),
-                                    tokens[9].trim()
+                                    parseFloat(tokens[6]), parseFloat(tokens[7]), parseFloat(tokens[8]), parseFloat(tokens[9]),
+                                    parseFloat(tokens[10]), tokens[11].trim()
                             );
                             break;
                         case "vw":

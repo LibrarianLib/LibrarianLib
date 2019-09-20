@@ -61,13 +61,13 @@ public class AbstractWritableObj implements WritableObj
     }
 
     @Override
-    public void addBone(int parent, FloatTuple head, FloatTuple tail, String name) {
+    public void addBone(int parent, FloatTuple position, FloatTuple rotation, float length, String name) {
         // Empty default implementation
     }
 
     @Override
-    public void addBone(int parent, float headX, float headY, float headZ, float tailX, float tailY, float tailZ, String name) {
-        addBone(parent, FloatTuples.create(headX, headY, headZ), FloatTuples.create(tailX, tailY, tailZ), name);
+    public void addBone(int parent, float x, float y, float z, float rotX, float rotY, float rotZ, float rotW, float length, String name) {
+        addBone(parent, FloatTuples.create(x, y, z), FloatTuples.create(rotX, rotY, rotZ, rotW), length, name);
     }
 
     @Override

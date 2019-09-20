@@ -46,25 +46,28 @@ public interface WritableObj
      * Adds a new bone to the current armature
      *
      * @param parent The parent bone index
-     * @param head The head position
-     * @param tail The tail position
+     * @param position The bone position
+     * @param rotation The bone rotation
+     * @param length The bone length
      * @param name The name of the bone
      */
-    void addBone(int parent, FloatTuple head, FloatTuple tail, String name);
+    void addBone(int parent, FloatTuple position, FloatTuple rotation, float length, String name);
 
     /**
      * Adds a new bone to the current armature
      *
      * @param parent The parent bone index
-     * @param headX The x axis of the head position
-     * @param headY The y axis of the head position
-     * @param headZ The z axis of the head position
-     * @param tailX The x axis of the tail position
-     * @param tailY The y axis of the tail position
-     * @param tailZ The z axis of the tail position
+     * @param x The x axis of the position
+     * @param y The y axis of the position
+     * @param z The z axis of the position
+     * @param rotX The x axis of the rotation quaternion
+     * @param rotY The y axis of the rotation quaternion
+     * @param rotZ The z axis of the rotation quaternion
+     * @param rotW The w axis of the rotation quaternion
+     * @param length The length of the bone
      * @param name The name of the bone
      */
-    void addBone(int parent, float headX, float headY, float headZ, float tailX, float tailY, float tailZ, String name);
+    void addBone(int parent, float x, float y, float z, float rotX, float rotY, float rotZ, float rotW, float length, String name);
 
     /**
      * Add the given vertex

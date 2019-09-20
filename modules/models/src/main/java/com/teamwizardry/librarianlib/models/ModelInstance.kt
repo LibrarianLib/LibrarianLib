@@ -113,15 +113,14 @@ class Armature(val name: String, val index: Int) {
         for(boneIndex in 0 until objArmature.numBones) {
             val objBone = objArmature.getBone(boneIndex)
             val parent = if(objBone.parent < 0) null else bones[objBone.parent]
-            var head = vec(objBone.head.x, objBone.head.y, objBone.head.z)
-            var tail = vec(objBone.tail.x, objBone.tail.y, objBone.tail.z)
+            var position = vec(objBone.position.x, objBone.position.y, objBone.position.z)
+            var rotation = Quaternion(objBone.rotation.x, objBone.rotation.y, objBone.rotation.z, objBone.rotation.w)
 
             if(parent != null) {
-                head = parent.worldToRest * head
-                tail = parent.worldToRest * tail
+                position = parent.worldToRest * position
             }
 
-            val bone = Bone(parent, objBone.name, head, tail)
+            val bone = Bone(parent, objBone.name, position, rotation, objBone.length.toDouble())
             bone.updateMatrices()
             bones.add(bone)
             if(parent == null)
@@ -144,17 +143,18 @@ class Bone(
      */
     val name: String,
     /**
-     * The "head" position of this bone. The head position is the "origin" of the bone, and is often equal to its
-     * parent's [tail] position. In Blender's default bone visualization style, the fat end of the bone corresponds to
-     * the bone's head, and the narrow end corresponds to the tail.
+     * The "origin" position of this bone at rest. In Blender's default bone visualization style, the fat end of the
+     * bone corresponds to the bone's head.
      */
-    val head: Vec3d,
+    val restPosition: Vec3d,
     /**
-     * The "tail" position of this bone. The tail position is the "end" or "tip" of the bone. In Blender's default bone
-     * visualization style, the narrow end of the bone corresponds to the bone's tail, and the fat end corresponds to
-     * the head.
+     * The rotation of this bone when at rest
      */
-    val tail: Vec3d
+    val restRotation: Quaternion,
+    /**
+     * The length of this bone
+     */
+    val length: Double
 ): CoordinateSpace3D {
     val children: MutableList<Bone> = mutableListOf()
     init {
@@ -164,21 +164,11 @@ class Bone(
     /**
      * The local transformation of this bone at rest, relative to its parent.
      */
-    val restTransform: Matrix4d = run {
-        val up = if (head.x == tail.x && head.z == tail.z)
-            vec(0, 0, 1)
-        else
-            vec(0, 1, 0)
-
-        Matrix4d.temporaryMatrix.also {
-            it.set(Matrix4d.IDENTITY)
-            it.translate(head)
-        } * Matrix4d.createLookAt(head, tail, up)
-    }
+    val restTransform: Matrix4d = Matrix4d.IDENTITY.translate(restPosition).rotate(restRotation)
     /**
      * The transformation to take points in the world space into this bone's local space
      */
-    val worldToRest: Matrix4d = ((parent?.restTransform ?: Matrix4d.IDENTITY) * restTransform).invert()
+    val worldToRest: Matrix4d = (restTransform * (parent?.restTransform ?: Matrix4d.IDENTITY)).invert()
 
     /**
      *
@@ -207,7 +197,7 @@ class Bone(
     fun updateMatrices() {
         val local = MutableMatrix4d()
         local.rotate(rotation)
-        //local.translate(translation)
+        local.translate(translation)
         localTransform = local.toImmutable()
 
         matrix = localTransform * restTransform

@@ -1,23 +1,26 @@
 package de.javagl.obj;
 
 public class DefaultObjBone implements ObjBone {
-    private int parent;
-    private String name;
-    private FloatTuple head;
-    private FloatTuple tail;
+    private final int parent;
+    private final String name;
+    private final FloatTuple position;
+    private final FloatTuple rotation;
+    private final float length;
 
-    public DefaultObjBone(int parent, String name, FloatTuple head, FloatTuple tail) {
+    public DefaultObjBone(int parent, String name, FloatTuple position, FloatTuple rotation, float length) {
         this.parent = parent;
         this.name = name;
-        this.head = head;
-        this.tail = tail;
+        this.position = position;
+        this.rotation = rotation;
+        this.length = length;
     }
 
     public DefaultObjBone(ObjBone other) {
         this.parent = other.getParent();
         this.name = other.getName();
-        this.head = FloatTuples.copy(other.getHead());
-        this.tail = FloatTuples.copy(other.getTail());
+        this.position = other.getPosition();
+        this.rotation = other.getRotation();
+        this.length = other.getLength();
     }
 
     @Override
@@ -31,12 +34,17 @@ public class DefaultObjBone implements ObjBone {
     }
 
     @Override
-    public FloatTuple getHead() {
-        return head;
+    public FloatTuple getPosition() {
+        return position;
     }
 
     @Override
-    public FloatTuple getTail() {
-        return tail;
+    public FloatTuple getRotation() {
+        return rotation;
+    }
+
+    @Override
+    public float getLength() {
+        return length;
     }
 }

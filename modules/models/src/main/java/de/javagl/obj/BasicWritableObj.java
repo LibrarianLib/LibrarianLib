@@ -199,16 +199,16 @@ public class BasicWritableObj implements WritableObj
     }
 
     @Override
-    public void addBone(int parent, FloatTuple head, FloatTuple tail, String name) {
+    public void addBone(int parent, FloatTuple position, FloatTuple rotation, float length, String name) {
         if (boneConsumer != null) {
-            boneConsumer.accept(ObjBones.create(parent, name, head, tail));
+            boneConsumer.accept(ObjBones.create(parent, name, position, rotation, length));
         }
     }
 
     @Override
-    public void addBone(int parent, float headX, float headY, float headZ, float tailX, float tailY, float tailZ, String name) {
+    public void addBone(int parent, float x, float y, float z, float rotX, float rotY, float rotZ, float rotW, float length, String name) {
         if (boneConsumer != null) {
-            boneConsumer.accept(ObjBones.create(parent, name, headX, headY, headZ, tailX, tailY, tailZ));
+            boneConsumer.accept(ObjBones.create(parent, name, x, y, z, rotX, rotY, rotZ, rotW, length));
         }
     }
 

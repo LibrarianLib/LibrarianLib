@@ -83,7 +83,7 @@ public class ObjArmatures
             output.addArmature(armature.getName());
             for (int j = 0; j < armature.getNumBones(); j++) {
                 ObjBone bone = armature.getBone(j);
-                output.addBone(bone.getParent(), bone.getHead(), bone.getTail(), bone.getName());
+                output.addBone(bone.getParent(), bone.getPosition(), bone.getRotation(), bone.getLength(), bone.getName());
             }
         }
     }

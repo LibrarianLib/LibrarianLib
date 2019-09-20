@@ -47,13 +47,14 @@ public class ObjBones
      *
      * @param parent The parent index
      * @param name The bone name
-     * @param head The head position
-     * @param tail The tail position
+     * @param position The position
+     * @param rotation The rotation quaternion
+     * @param length the bone length
      * @return The {@link ObjBone}
      */
-    public static ObjBone create(int parent, String name, FloatTuple head, FloatTuple tail)
+    public static ObjBone create(int parent, String name, FloatTuple position, FloatTuple rotation, float length)
     {
-        return new DefaultObjBone(parent, name, head, tail);
+        return new DefaultObjBone(parent, name, position, rotation, length);
     }
 
     /**
@@ -61,17 +62,19 @@ public class ObjBones
      *
      * @param parent The parent index
      * @param name The bone name
-     * @param headX The x component of the head position
-     * @param headY The y component of the head position
-     * @param headZ The z component of the head position
-     * @param tailX The x component of the tail position
-     * @param tailY The y component of the tail position
-     * @param tailZ The z component of the tail position
+     * @param x The x component of the position
+     * @param y The y component of the position
+     * @param z The z component of the position
+     * @param rotX The x component of the rotation quaternion
+     * @param rotY The y component of the rotation quaternion
+     * @param rotZ The z component of the rotation quaternion
+     * @param rotW The w component of the rotation quaternion
+     * @param length The length of the bone
      * @return The {@link ObjBone}
      */
-    public static ObjBone create(int parent, String name, float headX, float headY, float headZ, float tailX, float tailY, float tailZ)
+    public static ObjBone create(int parent, String name, float x, float y, float z, float rotX, float rotY, float rotZ, float rotW, float length)
     {
-        return new DefaultObjBone(parent, name, FloatTuples.create(headX, headY, headZ), FloatTuples.create(tailX, tailY, tailZ));
+        return new DefaultObjBone(parent, name, FloatTuples.create(x, y, z), FloatTuples.create(rotX, rotY, rotZ, rotW), length);
     }
 
     /**
@@ -86,9 +89,11 @@ public class ObjBones
         StringBuilder sb = new StringBuilder();
         sb.append(bone.getParent() + 1);
         sb.append(' ');
-        append3Tuple(sb, bone.getHead());
+        append3Tuple(sb, bone.getPosition());
         sb.append(' ');
-        append3Tuple(sb, bone.getTail());
+        append3Tuple(sb, bone.getRotation());
+        sb.append(' ');
+        sb.append(bone.getLength());
         sb.append(' ');
         sb.append(bone.getName());
         return sb.toString();
@@ -100,6 +105,16 @@ public class ObjBones
         sb.append(tuple.getY());
         sb.append(' ');
         sb.append(tuple.getZ());
+    }
+
+    private static void append4Tuple(StringBuilder sb, FloatTuple tuple) {
+        sb.append(tuple.getX());
+        sb.append(' ');
+        sb.append(tuple.getY());
+        sb.append(' ');
+        sb.append(tuple.getZ());
+        sb.append(' ');
+        sb.append(tuple.getW());
     }
 
     /**
