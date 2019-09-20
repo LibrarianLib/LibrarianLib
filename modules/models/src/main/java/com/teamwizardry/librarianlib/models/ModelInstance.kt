@@ -9,8 +9,10 @@ import com.teamwizardry.librarianlib.math.Quaternion
 import com.teamwizardry.librarianlib.math.WorldSpace
 import com.teamwizardry.librarianlib.math.cross
 import com.teamwizardry.librarianlib.math.minus
+import com.teamwizardry.librarianlib.math.plus
 import com.teamwizardry.librarianlib.math.times
 import com.teamwizardry.librarianlib.math.vec
+import de.javagl.obj.FloatTuple
 import de.javagl.obj.FloatTuples
 import de.javagl.obj.ObjArmature
 import de.javagl.obj.ObjBoneIndex
@@ -77,9 +79,25 @@ class ModelInstance(val root: Model) {
                 ))
             }
         }
+
+        for(faceIndex in 0 until model.numFaces) {
+            val face = model.getFace(faceIndex)
+            if(!face.containsNormalIndices()) continue
+            if(face.numVertices != 3) continue
+
+            val a = model.getVertex(face.getVertexIndex(0)).toVec3d()
+            val b = model.getVertex(face.getVertexIndex(1)).toVec3d()
+            val c = model.getVertex(face.getVertexIndex(2)).toVec3d()
+            val normal = ((c - b) cross (a - b)).normalize()
+            val normalTuple = normal.toFloatTuple()
+            _model.setNormal(face.getNormalIndex(0), normalTuple)
+            _model.setNormal(face.getNormalIndex(1), normalTuple)
+            _model.setNormal(face.getNormalIndex(2), normalTuple)
+        }
     }
 
     fun load() {
+        // we assume that root.obj has been passed through ObjUtils.convertToRenderable
         _model = Objs.create()
         ObjUtils.add(root.obj, _model)
         val armatures = mutableListOf<Armature>()
@@ -204,4 +222,12 @@ class Bone(
         inverseMatrix = matrix.invert()
         finalMatrix = worldToRest * this.conversionMatrixTo(WorldSpace)
     }
+}
+
+private fun FloatTuple.toVec3d(): Vec3d {
+    return vec(this.x, this.y, this.z)
+}
+
+private fun Vec3d.toFloatTuple(): FloatTuple {
+    return FloatTuples.create(this.x.toFloat(), this.y.toFloat(), this.z.toFloat())
 }

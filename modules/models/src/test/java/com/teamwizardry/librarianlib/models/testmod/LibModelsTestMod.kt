@@ -25,8 +25,7 @@ class LibModelsTestModule: TestMod("models", "Models", logger) {
             it.data++
             val bone = it.model["Armature"]["Bone"]
             bone.translation = vec(0, sin(Math.toRadians(it.data.toDouble() * 2)), 0)
-//            bone.rotation = Quaternion.fromAngleRadAxis(Math.toRadians(it.data.toDouble() % 360.0), 1.0, 0.0, 0.0)//fromAxesAnglesDeg( % 360.0, 0.0, 0.0)
-            bone.rotation = Quaternion.fromAngleRadAxis(Math.toRadians(45.0), 1.0, 0.0, 0.0)
+            bone.rotation = Quaternion.fromAngleRadAxis(Math.toRadians(it.data.toDouble() % 360.0), 1.0, 0.0, 0.0)
         }
     )
 

@@ -17,7 +17,9 @@ import java.lang.ref.WeakReference
 class Model(val location: ResourceLocation) {
 
     lateinit var obj: Obj
+        private set
     lateinit var mtls: MutableMap<String, Mtl>
+        private set
     private val instances = mutableListOf<WeakReference<ModelInstance>>()
 
     init {
