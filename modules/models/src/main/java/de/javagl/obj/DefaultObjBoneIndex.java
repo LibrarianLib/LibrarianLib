@@ -18,12 +18,12 @@ public class DefaultObjBoneIndex implements ObjBoneIndex {
 
     @Override
     public int getArmature() {
-        return 0;
+        return armature;
     }
 
     @Override
     public int getBone() {
-        return 0;
+        return bone;
     }
 
     @Override
