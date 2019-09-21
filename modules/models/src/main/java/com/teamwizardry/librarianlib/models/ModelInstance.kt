@@ -221,7 +221,7 @@ class Bone(
 
         matrix = restTransform * localTransform
         inverseMatrix = matrix.invert()
-        finalMatrix = worldToRest * this.conversionMatrixTo(WorldSpace)
+        finalMatrix = this.conversionMatrixTo(WorldSpace) * worldToRest
     }
 }
 
