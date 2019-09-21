@@ -269,7 +269,7 @@ class Quaternion
 
     /** Operator function for Kotlin  */
     operator fun times(q: Quaternion): Quaternion {
-        return add(q)
+        return mul(q)
     }
 
     /**

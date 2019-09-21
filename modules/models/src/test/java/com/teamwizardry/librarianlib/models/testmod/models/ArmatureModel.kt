@@ -26,6 +26,7 @@ open class ArmatureModel<S>(
     override fun render(entity: TestEntity, partialTicks: Float, state: ArmatureState<S>) {
         try {
             ModelRenderer.render(state.model)
+            ModelRenderer.renderArmatures(state.model)
         } catch (e: Exception) {
             logger.error(e)
         }

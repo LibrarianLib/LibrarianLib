@@ -2,13 +2,17 @@ package com.teamwizardry.librarianlib.models
 
 import com.mojang.blaze3d.platform.GlStateManager
 import com.teamwizardry.librarianlib.core.util.Client
+import com.teamwizardry.librarianlib.core.util.kotlin.color
 import com.teamwizardry.librarianlib.core.util.kotlin.pos
 import com.teamwizardry.librarianlib.core.util.kotlin.tex
+import com.teamwizardry.librarianlib.math.WorldSpace
+import com.teamwizardry.librarianlib.math.vec
 import de.javagl.obj.FloatTuples
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11
+import java.awt.Color
 
 object ModelRenderer {
     @JvmStatic
@@ -57,5 +61,38 @@ object ModelRenderer {
 
             tessellator.draw()
         }
+    }
+
+    @JvmStatic
+    fun renderArmatures(instance: ModelInstance) {
+        GlStateManager.disableTexture()
+        GlStateManager.shadeModel(GL11.GL_SMOOTH)
+
+        GlStateManager.depthFunc(GL11.GL_ALWAYS)
+        GlStateManager.depthMask(false)
+        GlStateManager.lineWidth(4f)
+        instance.armatures.forEach {
+            renderArmature(it, Color.DARK_GRAY)
+        }
+
+        GlStateManager.depthFunc(GL11.GL_LEQUAL)
+        GlStateManager.depthMask(true)
+        GlStateManager.lineWidth(2f)
+
+        GlStateManager.shadeModel(GL11.GL_FLAT)
+    }
+
+    private fun renderArmature(armature: Armature, color: Color) {
+        val tessellator = Tessellator.getInstance()
+        val vb = tessellator.buffer
+
+        vb.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR)
+        armature.bones.forEach { bone ->
+            val start = bone.convertPointTo(vec(0, 0, 0), WorldSpace)
+            val end = bone.convertPointTo(vec(0, bone.length, 0), WorldSpace)
+            vb.pos(start).color(Color(0xA020F0)).endVertex()
+            vb.pos(end).color(Color.PINK).endVertex()
+        }
+        tessellator.draw()
     }
 }

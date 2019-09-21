@@ -135,6 +135,7 @@ class Armature(val name: String, val index: Int) {
             var rotation = Quaternion(objBone.rotation.x, objBone.rotation.y, objBone.rotation.z, objBone.rotation.w)
 
             if(parent != null) {
+                rotation = parent.restRotation.invert() * rotation
                 position = parent.worldToRest * position
             }
 
@@ -182,7 +183,7 @@ class Bone(
     /**
      * The local transformation of this bone at rest, relative to its parent.
      */
-    val restTransform: Matrix4d = Matrix4d.IDENTITY.translate(restPosition).rotate(restRotation)
+    val restTransform: Matrix4d = Matrix4d.IDENTITY.rotate(restRotation).translate(restPosition)
     /**
      * The transformation to take points in the world space into this bone's local space
      */
@@ -218,7 +219,7 @@ class Bone(
         local.translate(translation)
         localTransform = local.toImmutable()
 
-        matrix = localTransform * restTransform
+        matrix = restTransform * localTransform
         inverseMatrix = matrix.invert()
         finalMatrix = worldToRest * this.conversionMatrixTo(WorldSpace)
     }
