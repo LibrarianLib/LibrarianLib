@@ -2,7 +2,6 @@
 
 package com.teamwizardry.librarianlib.core.util.kotlin
 
-
 import java.util.Collections
 import java.util.IdentityHashMap
 import java.util.NavigableMap
@@ -11,6 +10,39 @@ import java.util.SortedMap
 import java.util.SortedSet
 import java.util.TreeMap
 import java.util.TreeSet
+import kotlin.reflect.KProperty1
+
+/**
+ * Create a sequence using [next] to generate the next element in the sequence. The sequence ends when [next] returns
+ * null.
+ *
+ * This method was originally designed to easily iterate through an object's ancestors using a `parent` property. For
+ * example:
+ * ```
+ * val someFile = File("/some/file/path")
+ * val allParents = someFile.linkedSequence { it.parent }.map { it.name }.toList()
+ * // allParents == listOf("path", "file", "some")
+ * ```
+ */
+fun <T: Any> T.linkedSequence(next: (T) -> T?): Sequence<T> {
+    return LinkedSequence(this, next)
+}
+
+class LinkedSequence<T>(val initialValue: T, val generator: (T) -> T?): Sequence<T> {
+    override fun iterator(): Iterator<T> = LinkedIterator(initialValue, generator)
+
+    class LinkedIterator<T>(var nextValue: T?, val generator: (T) -> T?): Iterator<T> {
+        override fun hasNext(): Boolean {
+            return nextValue != null
+        }
+
+        override fun next(): T {
+            val current = nextValue ?: throw NoSuchElementException()
+            nextValue = generator(current)
+            return current
+        }
+    }
+}
 
 // Unmodifiable/synchronized wrappers ==================================================================================
 
