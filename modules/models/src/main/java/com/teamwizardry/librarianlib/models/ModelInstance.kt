@@ -131,16 +131,10 @@ class Armature(val name: String, val index: Int) {
         for(boneIndex in 0 until objArmature.numBones) {
             val objBone = objArmature.getBone(boneIndex)
             val parent = if(objBone.parent < 0) null else bones[objBone.parent]
-            var position = vec(objBone.position.x, objBone.position.y, objBone.position.z)
-            var rotation = Quaternion(objBone.rotation.x, objBone.rotation.y, objBone.rotation.z, objBone.rotation.w)
-
-            if(parent != null) {
-                rotation = parent.restRotation.invert() * rotation
-                position = parent.worldToRest * position
-            }
-
-            val bone = Bone(parent, objBone.name, position, rotation, objBone.length.toDouble())
-            bone.updateMatrices()
+            val position = vec(objBone.position.x, objBone.position.y, objBone.position.z)
+            val rotation = Quaternion(objBone.rotation.x, objBone.rotation.y, objBone.rotation.z, objBone.rotation.w)
+            val matrix = Matrix4d.IDENTITY.rotate(rotation).translate(position)
+            val bone = Bone(parent, objBone.name, objBone.length.toDouble(), matrix)
             bones.add(bone)
             if(parent == null)
                 rootBones.add(bone)
@@ -162,18 +156,13 @@ class Bone(
      */
     val name: String,
     /**
-     * The "origin" position of this bone at rest. In Blender's default bone visualization style, the fat end of the
-     * bone corresponds to the bone's head.
-     */
-    val restPosition: Vec3d,
-    /**
-     * The rotation of this bone when at rest
-     */
-    val restRotation: Quaternion,
-    /**
      * The length of this bone
      */
-    val length: Double
+    val length: Double,
+    /**
+     * The transformation to take points in this bone's local space into the world space
+     */
+    val restToWorld: Matrix4d
 ): CoordinateSpace3D {
     val children: MutableList<Bone> = mutableListOf()
     init {
@@ -181,13 +170,14 @@ class Bone(
     }
 
     /**
-     * The local transformation of this bone at rest, relative to its parent.
-     */
-    val restTransform: Matrix4d = Matrix4d.IDENTITY.rotate(restRotation).translate(restPosition)
-    /**
      * The transformation to take points in the world space into this bone's local space
      */
-    val worldToRest: Matrix4d = (restTransform * (parent?.restTransform ?: Matrix4d.IDENTITY)).invert()
+    val worldToRest: Matrix4d = restToWorld.invert()
+
+    /**
+     * The local transformation of this bone at rest, relative to its parent.
+     */
+    val restTransform: Matrix4d = (parent?.worldToRest ?: Matrix4d.IDENTITY) * restToWorld
 
     /**
      *

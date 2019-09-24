@@ -2,6 +2,7 @@ package com.teamwizardry.librarianlib.models.testmod
 
 import com.teamwizardry.librarianlib.math.Quaternion
 import com.teamwizardry.librarianlib.math.vec
+import com.teamwizardry.librarianlib.models.Bone
 import com.teamwizardry.librarianlib.models.Model
 import com.teamwizardry.librarianlib.models.testmod.models.ArmatureModel
 import com.teamwizardry.librarianlib.models.testmod.models.SimpleModel
@@ -58,6 +59,35 @@ class LibModelsTestModule: TestMod("models", "Models", logger) {
             angle = PI/4 * sin(angle)
             val quaternion = Quaternion.fromAngleRadAxis(angle, 1.0, 0.0, 0.0)
             bones.forEach { it.rotation = quaternion }
+        },
+        ArmatureModel("steve", "Steve", { 0 }) { state ->
+            val cycle = sin((state.data / 40.0) * PI * 2)
+            val angle = Math.toRadians(cycle * 20)
+
+            val rot1 = Quaternion.fromAngleRadAxis(angle, 0.0, 0.0, 1.0)
+            val rot2 = Quaternion.fromAngleRadAxis(angle, 0.0, 0.0, -1.0)
+            val armature = state.model["Armature"]
+            armature["Right_Arm"].rotation = rot1
+            armature["Left_Leg"].rotation = rot1
+            armature["Left_Arm"].rotation = rot2
+            armature["Right_Leg"].rotation = rot2
+            armature["Head"].rotation = Quaternion.fromAngleDegAxis(10.0, 0.0, 0.0, 1.0) * Quaternion.fromAngleRadAxis(angle, 0.0, 1.0, 0.0)
+
+            state.data++
+        },
+        ArmatureModel("non_axis_aligned_bones", "Off-axis bones", { 0 }) { state ->
+            val bones = state.model["Armature"].let {
+                listOf(it["+z+x"], it["+z-x"], it["-z-x"], it["-z+x"])
+            }
+
+            bones.forEachIndexed { i, bone ->
+                val ticks = state.data + i * 10
+                val cycle = sin(ticks / 40.0)
+                val angle = sin(Math.toRadians(cycle * 15.0))
+                bone.rotation = Quaternion.fromAngleRadAxis(angle, 1.0, 0.0, 0.0)
+            }
+
+            state.data++
         },
 
         null

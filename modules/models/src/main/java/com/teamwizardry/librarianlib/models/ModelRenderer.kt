@@ -11,6 +11,7 @@ import de.javagl.obj.FloatTuples
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import net.minecraft.util.ResourceLocation
+import net.minecraft.util.ResourceLocationException
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 
@@ -28,8 +29,12 @@ object ModelRenderer {
             val textured = mtl?.mapKd != null
 
             if(textured) {
-                Client.renderEngine.bindTexture(ResourceLocation(group.name))
-                GlStateManager.enableTexture()
+                try {
+                    Client.renderEngine.bindTexture(ResourceLocation(group.name))
+                    GlStateManager.enableTexture()
+                } catch(e: ResourceLocationException) {
+                    GlStateManager.disableTexture()
+                }
             } else {
                 GlStateManager.disableTexture()
             }

@@ -16,7 +16,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-# <pep8 compliant>
+# <pep8 compliant> # probably not any more lol
 
 import os
 
@@ -361,7 +361,7 @@ def write_file(filepath, objects, scene,
                 armature = armature_object.data
                 if armature in armature_ids:
                     return
-                head_fw('#> a %s\n' % (armature.name))
+                head_fw('#> a %s\n' % (name_compat(armature.name)))
                 armature_id = len(armature_ids)
                 armature_ids[armature] = armature_id
 
@@ -380,7 +380,7 @@ def write_file(filepath, objects, scene,
                         parent,
                         pos.x, pos.y, pos.z,
                         quat.x, quat.y, quat.z, quat.w,
-                        bone.length, bone.name
+                        bone.length, name_compat(bone.name)
                         ))
                     bone_id = len(bone_ids)
                     bone_ids[bone] = bone_id
