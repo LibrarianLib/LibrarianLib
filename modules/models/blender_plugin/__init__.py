@@ -33,6 +33,8 @@ if "bpy" in locals():
     import importlib
     if "export_obj_skl" in locals():
         importlib.reload(export_obj_skl)
+    if "action_encode" in locals():
+        importlib.reload(action_encode)
 
 
 import bpy

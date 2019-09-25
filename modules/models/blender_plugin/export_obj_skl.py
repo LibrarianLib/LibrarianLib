@@ -26,7 +26,6 @@ import bpy_extras.io_utils
 
 from progress_report import ProgressReport, ProgressReportSubstep
 
-
 def name_compat(name):
     if name is None:
         return 'None'
@@ -203,6 +202,24 @@ def test_nurbs_compat(ob):
 
     return False
 
+def write_actions(scene, filepath):
+    from . import action_encode 
+
+    with open(filepath, "w", encoding="utf8", newline="\n") as f:
+        fw = f.write
+        fw('# Blender ACT File: %r\n' % (os.path.basename(bpy.data.filepath) or "None"))
+        fw('# Action Count: %i\n' % len(bpy.data.actions))
+
+        for bpyAction in bpy.data.actions:
+            action = action_encode.EncodedAction(bpyAction)
+            fw('a %s\n' % name_compat(action.name))
+            
+            for curve in action.curves:
+                fw('c %d %s\n' % (curve.index, curve.path))
+                for frame, value in curve.samples:
+                    fw('k %.6f %.6f\n' % (frame, value))
+
+
 
 def write_nurb(fw, skl_lines, ob, ob_mat):
     tot_verts = 0
@@ -349,6 +366,7 @@ def write_file(filepath, objects, scene,
                 # filepath can contain non utf8 chars, use repr
                 head_fw('mtllib %s\n' % repr(os.path.basename(mtlfilepath))[1:-1])
 
+            actfilepath = os.path.splitext(filepath)[0] + ".act"
             # Tell the obj file what material file to use.
                 # filepath can contain non utf8 chars, use repr
                 # head_fw('#> skllib %s\n' % repr(os.path.basename(sklfilepath))[1:-1])
@@ -782,6 +800,7 @@ def write_file(filepath, objects, scene,
         # Now we have all our materials, save them
         if EXPORT_MTL:
             write_mtl(scene, mtlfilepath, EXPORT_PATH_MODE, copy_set, mtl_dict)
+        write_actions(scene, actfilepath)
 
         # copy all collected files.
         bpy_extras.io_utils.path_reference_copy(copy_set)
