@@ -26,6 +26,7 @@ import bpy_extras.io_utils
 
 from progress_report import ProgressReport, ProgressReportSubstep
 
+
 def name_compat(name):
     if name is None:
         return 'None'
@@ -150,7 +151,7 @@ def write_mtl(scene, filepath, path_mode, copy_set, mtl_dict):
                         if image:
                             # texface overrides others
                             if (mtex.use_map_color_diffuse and (face_img is None) and
-                                (mtex.use_map_warp is False) and (mtex.texture_coords != 'REFLECTION')):
+                                    (mtex.use_map_warp is False) and (mtex.texture_coords != 'REFLECTION')):
                                 image_map["map_Kd"] = (mtex, image)
                             if mtex.use_map_ambient:
                                 image_map["map_Ka"] = (mtex, image)
@@ -192,6 +193,7 @@ def write_mtl(scene, filepath, path_mode, copy_set, mtl_dict):
                     else:
                         fw('%s %s\n' % (key, repr(filepath)[1:-1]))
 
+
 def test_nurbs_compat(ob):
     if ob.type != 'CURVE':
         return False
@@ -202,23 +204,26 @@ def test_nurbs_compat(ob):
 
     return False
 
-def write_actions(scene, filepath):
-    from . import action_encode 
+
+def write_actions(armature_objects, filepath):
+    from . import action_encode
+
+    animations = {it.name: action_encode.get_animations(it) for it in armature_objects}
 
     with open(filepath, "w", encoding="utf8", newline="\n") as f:
         fw = f.write
         fw('# Blender ACT File: %r\n' % (os.path.basename(bpy.data.filepath) or "None"))
-        fw('# Action Count: %i\n' % len(bpy.data.actions))
+        fw('# Action Count: %i\n' % sum(len(it) for it in animations))
 
-        for bpyAction in bpy.data.actions:
-            action = action_encode.EncodedAction(bpyAction)
-            fw('a %s\n' % name_compat(action.name))
-            
-            for curve in action.curves:
-                fw('c %d %s\n' % (curve.index, curve.path))
-                for frame, value in curve.samples:
-                    fw('k %.6f %.6f\n' % (frame, value))
-
+        for armature, tracks in animations.items():
+            fw('o %s\n' % name_compat(armature))
+            for animation in tracks:
+                fw('a %s\n' % name_compat(animation.name))
+                # curves = {channel: curve.optimized() }
+                for channel, curve in animation.get_curves().items():
+                    fw('c %s\n' % channel)
+                    for sample in curve.optimized().samples:
+                        fw('k %d %f\n' % (sample.frame, sample.value))
 
 
 def write_nurb(fw, skl_lines, ob, ob_mat):
@@ -347,11 +352,14 @@ def write_file(filepath, objects, scene,
     with ProgressReportSubstep(progress, 2, "OBJ Export path: %r" % filepath, "OBJ Export Finished") as subprogress1:
         with open(filepath, "w", encoding="utf8", newline="\n") as obj_file:
             body_output = ""
+
             # fw = f.write
             def fw(s):
                 nonlocal body_output
                 body_output += s
+
             header_output = ""
+
             def head_fw(s):
                 nonlocal header_output
                 header_output += s
@@ -367,25 +375,25 @@ def write_file(filepath, objects, scene,
                 head_fw('mtllib %s\n' % repr(os.path.basename(mtlfilepath))[1:-1])
 
             actfilepath = os.path.splitext(filepath)[0] + ".act"
-            # Tell the obj file what material file to use.
-                # filepath can contain non utf8 chars, use repr
-                # head_fw('#> skllib %s\n' % repr(os.path.basename(sklfilepath))[1:-1])
+            head_fw('#> actlib %s\n' % repr(os.path.basename(actfilepath))[1:-1])
 
             flat_ids = {}
             armature_ids = {}
             armature_bones = {}
+            armature_objects = []
 
             def add_armature(armature_object):
                 armature = armature_object.data
                 if armature in armature_ids:
                     return
+                armature_objects.append(armature_object)
                 head_fw('#> a %s\n' % (name_compat(armature.name)))
                 armature_id = len(armature_ids)
                 armature_ids[armature] = armature_id
 
                 bone_ids = {}
                 armature_bones[armature] = bone_ids
-                
+
                 def add_bone(bone):
                     quat = bone.matrix_local.to_quaternion().copy()
                     quat.rotate(EXPORT_GLOBAL_QUATERNION)
@@ -399,13 +407,13 @@ def write_file(filepath, objects, scene,
                         pos.x, pos.y, pos.z,
                         quat.x, quat.y, quat.z, quat.w,
                         bone.length, name_compat(bone.name)
-                        ))
+                    ))
                     bone_id = len(bone_ids)
                     bone_ids[bone] = bone_id
                     flat_ids[bone] = (armature_id, bone_id)
                     [add_bone(it) for it in bone.children]
-                [add_bone(bone) for bone in armature.bones if not bone.parent]
 
+                [add_bone(bone) for bone in armature.bones if not bone.parent]
 
             # Initialize totals, these are updated each object
             totverts = totuvco = totno = 1
@@ -491,7 +499,8 @@ def write_file(filepath, objects, scene,
                         else:
                             edges = []
 
-                        if not (len(face_index_pairs) + len(edges) + len(me.vertices)):  # Make sure there is something to write
+                        if not (len(face_index_pairs) + len(edges) + len(
+                                me.vertices)):  # Make sure there is something to write
                             # clean up
                             bpy.data.meshes.remove(me)
                             continue  # dont bother with this mesh.
@@ -569,7 +578,8 @@ def write_file(filepath, objects, scene,
                         subprogress2.step()
 
                         vertGroupNames = ob.vertex_groups.keys()
-                        ob_armature_modifiers = [modifier for modifier in ob.modifiers if isinstance(modifier, bpy.types.ArmatureModifier) and modifier.object]
+                        ob_armature_modifiers = [modifier for modifier in ob.modifiers if
+                                                 isinstance(modifier, bpy.types.ArmatureModifier) and modifier.object]
                         [add_armature(mod.object) for mod in ob_armature_modifiers if mod.object]
 
                         # Vert
@@ -610,7 +620,7 @@ def write_file(filepath, objects, scene,
                                     # allowed by the OBJ spec but can cause issues for other importers, see: T47010.
 
                                     # this works too, shared UV's for all verts
-                                    #~ uv_key = veckey2d(uv)
+                                    # ~ uv_key = veckey2d(uv)
                                     uv_key = loops[l_index].vertex_index, veckey2d(uv)
 
                                     uv_val = uv_get(uv_key)
@@ -725,7 +735,8 @@ def write_file(filepath, objects, scene,
 
                                     if EXPORT_GROUP_BY_MAT:
                                         # can be mat_image or (null)
-                                        fw("g %s_%s_%s\n" % (name_compat(ob.name), name_compat(ob.data.name), mat_data[0]))
+                                        fw("g %s_%s_%s\n" % (
+                                        name_compat(ob.name), name_compat(ob.data.name), mat_data[0]))
                                     if EXPORT_MTL:
                                         fw("usemtl %s\n" % mat_data[0])  # can be mat_image or (null)
 
@@ -800,7 +811,7 @@ def write_file(filepath, objects, scene,
         # Now we have all our materials, save them
         if EXPORT_MTL:
             write_mtl(scene, mtlfilepath, EXPORT_PATH_MODE, copy_set, mtl_dict)
-        write_actions(scene, actfilepath)
+        write_actions(armature_objects, actfilepath)
 
         # copy all collected files.
         bpy_extras.io_utils.path_reference_copy(copy_set)
@@ -827,7 +838,6 @@ def _write(context, filepath,
            EXPORT_GLOBAL_MATRIX,
            EXPORT_PATH_MODE,  # Not used
            ):
-
     with ProgressReport(context.window_manager) as progress:
         base_name, ext = os.path.splitext(filepath)
         context_name = [base_name, '', '', ext]  # Base name, scene name, frame number, extension
@@ -919,7 +929,6 @@ def save(context,
          global_matrix=None,
          path_mode='AUTO'
          ):
-
     _write(context, filepath,
            EXPORT_TRI=use_triangles,
            EXPORT_EDGES=use_edges,

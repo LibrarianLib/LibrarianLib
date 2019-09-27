@@ -1,74 +1,213 @@
+import textwrap
+from math import floor, ceil, isclose
+from typing import List, Tuple, Dict, Sequence
+
 import bpy
-from math import floor, ceil
-from collections import namedtuple
+from bpy.types import PoseBone, Object, NlaTrack
+from mathutils import Matrix
 
-Sample = namedtuple('Sample', 'frame value')
 
-class EncodedAction:
-    def __init__(self, action):
-        self.name = action.name
-        self.curves = [Curve(fcurve).optimize() for fcurve in action.fcurves]
+class Sample:
+    """The value of a property as sampled at a specific frame"""
+
+    def __init__(self, frame: int, value: float):
+        self.frame = frame
+        self.value = value
+
+    def slope_to(self, other: 'Sample') -> float:
+        return (other.value - self.value) / (other.frame - self.frame)
+
+    def __str__(self) -> str:
+        return '%3d - %f' % (self.frame, self.value)
+
+    precision = 1e-5
+
+
+class KeySample(Sample):
+    """A sample that isn't eligible for optimization"""
+
+    def __init__(self, other: Sample):
+        super().__init__(other.frame, other.value)
+
+    def __str__(self) -> str:
+        return '%3d # %f (key)' % (self.frame, self.value)
+
 
 class Curve:
-    def __init__(self, fcurve=None):
-        self.path = ""
-        self.index = 0
-        self.samples = []
-        if fcurve:
-            frange = (int(floor(fcurve.range()[0])), int(ceil(fcurve.range()[1])))
 
-            self.path = fcurve.data_path
-            self.index = fcurve.array_index
-            self.samples = [Sample(frame, fcurve.evaluate(frame)) for frame in range(frange[0], frange[1] + 1)]
+    def __init__(self, samples: Sequence[Sample]):
+        self.samples = [it for it in samples]
 
-    def optimize(self):
-        """Create an optimized copy of this curve"""
-        optimized = Curve()
-        optimized.path = self.path
-        optimized.index = self.index
+    def __str__(self) -> str:
+        if len(self.samples) == 0:
+            return '[]'
+        return '[\n' + textwrap.indent('\n'.join([str(it) for it in self.samples]), '    ') + '\n]'
 
-        samples = self.samples
-        if len(samples) < 3: 
-            # it's impossible to further optimize one or two samples and the optimization 
-            # code is much simpler if we can assume there are at least three samples
-            return optimized
+    def copy(self) -> 'Curve':
+        return Curve(self.samples)
 
-        value_range = (min([frame[1] for frame in samples]), max([frame[1] for frame in samples]))
+    def maximum_error(self, start_index: int, end_index: int) -> float:
+        if start_index > end_index:
+            raise IndexError('start index %d is >= end index %d' % (start_index, end_index))
+        if start_index + 1 >= end_index:
+            return 0
+        start = self.samples[start_index]
+        end = self.samples[end_index]
+        slope = start.slope_to(end)
+
+        # calculate the difference between the value that would be expected when lerping and the actual value
+        def error(sample):
+            expected = start.value + (sample.frame - start.frame) * slope
+            return sample.value - expected
+
+        return max([abs(error(self.samples[i])) for i in range(start_index + 1, end_index)])
+
+    def optimized(self):
+        """Creates an optimized copy of this curve"""
+
+        # zero, one, or two samples can't be further optimized
+        if len(self.samples) <= 2:
+            return self.copy()
+
+        value_range = (min([point.value for point in self.samples]), max([point.value for point in self.samples]))
         error_tolerance = (value_range[1] - value_range[0]) * 0.01
 
-        def maximum_error(start_index, end_index):
-            start = samples[start_index]
-            end = samples[end_index]
-            slope = (end.value - start.value) / (end.frame - start.frame)
+        curve = self.copy()
 
-            # calculate the difference between the value that would be expected when lerping and the actual value
-            def error(sample):
-                expected = start.value + (sample.frame - start.frame) * slope
-                return sample.value - expected
+        curve.samples[0] = KeySample(curve.samples[0])
+        curve.samples[-1] = KeySample(curve.samples[-1])
+        curve = curve.__approximate(Sample.precision)
+        curve = curve.__approximate(error_tolerance)
 
-            return max([abs(error(samples[i])) for i in range(start_index + 1, end_index)])
+        return curve
+
+    # graphical explanation: https://i.imgur.com/Gtb7pKl.png
+    def __approximate(self, tolerance: float) -> 'Curve':
+        """Approximates this curve, ensuring the approximation error will never exceed the passed tolerance"""
+        if len(self.samples) <= 2:
+            return self.copy()
 
         latest_sample = 0
-        
-        if maximum_error(0, len(samples) - 1) < 1e-5:
-            optimized.samples.append(samples[0])
-            optimized.samples.append(samples[-1])
-            return optimized
 
-        # graphical explanation: https://i.imgur.com/afUuorb.png
         # the first value will always be present
-        optimized.samples.append(samples[0])
-        # skip to testing the third value. The error between the first and second values will always be 0, since there are no points between them
-        for i in range(2, len(samples)):
-            current_error = maximum_error(latest_sample, i)
-            # second section of condition tests to see if this is a deviation after a long sequence of linear points. It does this by
-            # checking if the entire section since the latest sample up to, but not including, the current one have a tiny error. If they do,
-            # and this one doesn't, then it assumes it's at the end of a linear section and adds a keyframe accordingly.
-            if current_error > error_tolerance or (current_error > 1e-5 and i - latest_sample > 2 and maximum_error(latest_sample, i-1) < 1e-5):
-                # this point introduces too much of an error, so we add the previous point
-                optimized.samples.append(samples[i-1])
-                latest_sample = i-1
-        # and we only ever add the "previous" value so the loop will never add the last value, which should always be present
-        optimized.samples.append(samples[-1])
+        optimized = [self.samples[0]]
+        for i in range(1, len(self.samples) - 1):
+            # if the next point introduces too much error, the approximation segment ends here
+            if self.maximum_error(latest_sample, i + 1) > tolerance:
+                if latest_sample < i - 1:
+                    # make the endpoints key samples, otherwise the approximations themselves might be optimized away
+                    # in future passes
+                    optimized[-1] = KeySample(optimized[-1])
+                    optimized.append(KeySample(self.samples[i]))
+                else:
+                    # if no points were actually optimized out, just append this point
+                    optimized.append(self.samples[i])
+                latest_sample = i
+        optimized.append(self.samples[-1])
 
-        return optimized
+        return Curve(optimized)
+
+
+class BoneState:
+    def __init__(self, bone: PoseBone):
+        self.name = bone.name
+        self.matrix = bone.matrix_basis.copy()
+
+    def get_channels(self) -> List[Tuple[str, float]]:
+        relative_matrix = self.matrix
+        translation = relative_matrix.translation
+        rotation = relative_matrix.to_quaternion()
+
+        return [
+            ('tx', translation.x),
+            ('ty', translation.y),
+            ('tz', translation.z),
+            ('rw', rotation.w),
+            ('rx', rotation.x),
+            ('ry', rotation.y),
+            ('rz', rotation.z),
+        ]
+
+    def __repr__(self) -> str:
+        relative_matrix = self.matrix
+        translation = relative_matrix.translation
+        rotation = relative_matrix.to_quaternion()
+        out = self.name
+        if isclose(translation.x, 0) and isclose(translation.y, 0) and isclose(translation.z, 0):
+            out += ' ()'
+        else:
+            out += ' (%f, %f, %f)' % translation.to_tuple()
+
+        if isclose(rotation.w, 1) and isclose(rotation.x, 0) and isclose(rotation.y, 0) and isclose(rotation.z, 0):
+            out += ' ()'
+        else:
+            out += ' (%f, %f, %f, %f)' % (rotation.w, rotation.x, rotation.y, rotation.z)
+        return out
+
+    default_channels = {
+        'tx': 0,
+        'ty': 0,
+        'tz': 0,
+        'rw': 1,
+        'rx': 0,
+        'ry': 0,
+        'rz': 0,
+    }
+
+
+class Animation:
+
+    def __init__(self, armature_object: Object, track: NlaTrack):
+        # noinspection PyTypeChecker
+        self.armature = armature_object.data
+        self.name = track.name
+        self.frames = []
+
+        was_muted = track.mute
+        track.mute = False
+        track.is_solo = True
+
+        for pb in armature_object.pose.bones:
+            pb.matrix_basis = Matrix()
+
+        start = int(floor(min([strip.frame_start for strip in track.strips])))
+        end = int(ceil(max([strip.frame_end for strip in track.strips])))
+
+        self.frame_range = range(start, end + 1)
+
+        for f in self.frame_range:
+            bpy.context.scene.frame_set(f)
+            self.frames.append([BoneState(bone) for bone in armature_object.pose.bones])
+
+        bpy.context.scene.frame_set(0)
+        track.is_solo = False
+        track.mute = was_muted
+        for pb in armature_object.pose.bones:
+            pb.matrix_basis = Matrix()
+
+    def get_curves(self) -> Dict[str, Curve]:
+        start = self.frame_range.start
+        bones = {}
+        # _        bones: Dict[str, Dict[str, List[Sample]]] = {}
+        for idx, states in enumerate(self.frames):
+            frame = start + idx
+            for bone in states:
+                curves = bones.setdefault(bone.name, {})
+                for channel, value in bone.get_channels():
+                    curves.setdefault(channel, []).append(Sample(frame, value))
+        all_curves = {}
+        # _        all_curves: Dict[str, Curve] = {}
+        for bone, curves in bones.items():
+            for channel, samples in curves.items():
+                default_value = BoneState.default_channels[channel]
+                is_empty = all(isclose(it.value, default_value, rel_tol=Sample.precision) for it in samples)
+                if not is_empty:
+                    all_curves['%s.%s' % (bone, channel)] = Curve(samples)
+        return all_curves
+
+
+def get_animations(armature_object: Object):
+    # noinspection PyTypeChecker
+    tracks = armature_object.animation_data.nla_tracks
+    # _    tracks: List[NlaTrack] = armature_object.animation_data.nla_tracks
+    return [Animation(armature_object, track) for track in tracks if len(track.strips) > 0]
