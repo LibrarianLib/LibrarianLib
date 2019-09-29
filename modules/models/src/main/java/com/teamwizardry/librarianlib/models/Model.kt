@@ -4,6 +4,8 @@ import com.teamwizardry.librarianlib.core.util.Client
 import com.teamwizardry.librarianlib.core.util.kotlin.filename
 import com.teamwizardry.librarianlib.core.util.kotlin.getResourceOrNull
 import com.teamwizardry.librarianlib.core.util.kotlin.resolveSibling
+import de.javagl.obj.Act
+import de.javagl.obj.ActReader
 import de.javagl.obj.Mtl
 import de.javagl.obj.MtlReader
 import de.javagl.obj.Obj
@@ -19,6 +21,8 @@ class Model(val location: ResourceLocation) {
     lateinit var obj: Obj
         private set
     lateinit var mtls: MutableMap<String, Mtl>
+        private set
+    lateinit var actions: Act
         private set
     private val instances = mutableListOf<WeakReference<ModelInstance>>()
 
@@ -41,9 +45,17 @@ class Model(val location: ResourceLocation) {
                     MtlReader.read(it)
                 } ?: emptyList()
             }.associateBy { it.name }.toMutableMap()
+            actions = Act()
+            obj.actFileNames.forEach { actName ->
+                val actFile = Client.resourceManager.getResourceOrNull(location.resolveSibling(actName))
+                actFile?.inputStream?.use {
+                    actions.merge(ActReader.read(it))
+                }
+            }
         } else {
             obj = Objs.create()
             mtls = mutableMapOf()
+            actions = Act()
         }
 
         instances.removeIf { instance ->

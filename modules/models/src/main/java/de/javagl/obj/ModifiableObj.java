@@ -124,4 +124,14 @@ public interface ModifiableObj extends ReadableObj {
      * @param fileNames The names of the MTL files.
      */
     void setMtlFileNames(List<String> fileNames);
+
+    /**
+     * Replaces an unmodifiable list containing the names of the ACT file
+     * that are associated with this OBJ, as they have been read from
+     * the <code>actlib</code> line.
+     * This may be an empty list, if no ACT file names have been read.
+     *
+     * @param fileNames The names of the ACT files.
+     */
+    void setActFileNames(List<String> fileNames);
 }

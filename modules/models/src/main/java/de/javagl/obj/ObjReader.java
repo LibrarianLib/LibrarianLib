@@ -232,6 +232,9 @@ public class ObjReader
                 case "#>":
                     identifier = st.nextToken().toLowerCase();
                     switch(identifier) {
+                        case "actlib":
+                            output.setActFileNames(Collections.singleton(line.substring(line.indexOf('b') + 1).trim()));
+                            break;
                         case "a":
                             output.addArmature(line.substring(line.indexOf('a') + 1).trim());
                             break;

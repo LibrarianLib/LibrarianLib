@@ -181,6 +181,12 @@ public class AbstractWritableObj implements WritableObj
         // Empty default implementation
     }
 
-    
-    
+    @Override
+    public void setActFileNames(Collection<? extends String> actFileNames)
+    {
+        // Empty default implementation
+    }
+
+
+
 }

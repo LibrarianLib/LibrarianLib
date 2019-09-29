@@ -244,6 +244,16 @@ public interface ReadableObj
     List<String> getMtlFileNames();
 
     /**
+     * Returns an unmodifiable list containing the names of the ACT file
+     * that are associated with this OBJ, as they have been read from
+     * the <code>actlib</code> line.
+     * This may be an empty list, if no ACT file names have been read.
+     *
+     * @return The names of the ACT files.
+     */
+    List<String> getActFileNames();
+
+    /**
      * Get the bounding 3d rectangle for this object. If this object contains no vertices the bounding rectangle will be
      * null.
      *

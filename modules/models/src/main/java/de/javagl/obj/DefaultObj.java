@@ -100,7 +100,12 @@ final class DefaultObj implements Obj
      * The names of the MTL files for this Obj.
      */
     private List<String> mtlFileNames = Collections.emptyList();
-    
+
+    /**
+     * The names of the ACT files for this Obj.
+     */
+    private List<String> actFileNames = Collections.emptyList();
+
     /**
      * A map from the faces to the names of the groups that started
      * at this face
@@ -359,6 +364,17 @@ final class DefaultObj implements Obj
     }
 
     @Override
+    public List<String> getActFileNames()
+    {
+        return actFileNames;
+    }
+
+    @Override
+    public void setActFileNames(List<String> fileNames) {
+        actFileNames = fileNames;
+    }
+
+    @Override
     public void addArmature(String name) {
         armatures.add(ObjArmatures.createMutable(name));
     }
@@ -554,6 +570,13 @@ final class DefaultObj implements Obj
     {
         this.mtlFileNames = Collections.unmodifiableList(
             new ArrayList<String>(mtlFileNames));
+    }
+
+    @Override
+    public void setActFileNames(Collection<? extends String> actFileNames)
+    {
+        this.actFileNames = Collections.unmodifiableList(
+                new ArrayList<String>(actFileNames));
     }
 
     @Override

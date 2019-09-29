@@ -98,6 +98,10 @@ public class BasicWritableObj implements WritableObj
      * The consumer for MTL file names
      */
     private Consumer<? super Collection<? extends String>> mtlFileNamesConsumer;
+    /**
+     * The consumer for ACT file names
+     */
+    private Consumer<? super Collection<? extends String>> actFileNamesConsumer;
 
     /**
      * Default constructor
@@ -189,6 +193,17 @@ public class BasicWritableObj implements WritableObj
         Consumer<? super Collection<? extends String>> mtlFileNamesConsumer)
     {
         this.mtlFileNamesConsumer = mtlFileNamesConsumer;
+    }
+
+    /**
+     * Set the ACT file names consumer
+     *
+     * @param actFileNamesConsumer The consumer
+     */
+    public void setActFileNamesConsumer(
+            Consumer<? super Collection<? extends String>> actFileNamesConsumer)
+    {
+        this.actFileNamesConsumer = actFileNamesConsumer;
     }
 
     @Override
@@ -352,6 +367,13 @@ public class BasicWritableObj implements WritableObj
         }
     }
 
-
+    @Override
+    public final void setActFileNames(Collection<? extends String> actFileNames)
+    {
+        if (actFileNamesConsumer != null)
+        {
+            actFileNamesConsumer.accept(actFileNames);
+        }
+    }
 
 }

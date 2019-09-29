@@ -269,5 +269,12 @@ public interface WritableObj
      * @param mtlFileNames The names of the MTL file
      */
     void setMtlFileNames(Collection<? extends String> mtlFileNames);
-    
+
+    /**
+     * Set the given ACT file names. A copy of the given
+     * collection will be stored.
+     *
+     * @param actFileNames The names of the MTL file
+     */
+    void setActFileNames(Collection<? extends String> actFileNames);
 }
