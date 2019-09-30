@@ -12,6 +12,8 @@ import com.teamwizardry.librarianlib.math.minus
 import com.teamwizardry.librarianlib.math.plus
 import com.teamwizardry.librarianlib.math.times
 import com.teamwizardry.librarianlib.math.vec
+import de.javagl.obj.ActAction
+import de.javagl.obj.ActObject
 import de.javagl.obj.FloatTuple
 import de.javagl.obj.FloatTuples
 import de.javagl.obj.ObjArmature
@@ -103,7 +105,7 @@ class ModelInstance(val root: Model) {
         val armatures = mutableListOf<Armature>()
         for(armatureIndex in 0 until _model.numArmatures) {
             val objArmature = _model.getArmature(armatureIndex)
-            val armature = Armature(objArmature.name, armatureIndex)
+            val armature = Armature(this, objArmature.name, armatureIndex)
             armatures.add(armature)
             armature.loadObj(model, objArmature)
             armature.bones.forEachIndexed { boneIndex, bone ->
@@ -115,14 +117,42 @@ class ModelInstance(val root: Model) {
     }
 }
 
-class Armature(val name: String, val index: Int) {
+class Armature(val model: ModelInstance, val name: String, val index: Int) {
     var bones: List<Bone> = listOf()
         private set
     var rootBones: List<Bone> = listOf()
         private set
     private var boneMap: Map<String, Bone> = mapOf()
+    var actObject: ActObject? = null
+        private set
 
     operator fun get(name: String): Bone = boneMap.getValue(name)
+
+    private var action: ActAction? = null
+
+    fun startAction(name: String) {
+        action = actObject?.getAction(name)
+    }
+
+    fun seekFrame(frame: Int) {
+        val action = action ?: return
+        for(i in 0 until action.channelCount) {
+            val channel = action.getChannel(i)
+            val boneName = channel.name.substringBeforeLast('.')
+            val property = channel.name.substringAfterLast('.')
+            val value = channel.getValue(frame.toFloat()).toDouble()
+            val bone = boneMap[boneName] ?: continue
+            when(property) {
+                "rx" -> bone.rotation = Quaternion(value, bone.rotation.y, bone.rotation.z, bone.rotation.w)
+                "ry" -> bone.rotation = Quaternion(bone.rotation.x, value, bone.rotation.z, bone.rotation.w)
+                "rz" -> bone.rotation = Quaternion(bone.rotation.x, bone.rotation.y, value, bone.rotation.w)
+                "rw" -> bone.rotation = Quaternion(bone.rotation.x, bone.rotation.y, bone.rotation.z, value)
+                "tx" -> bone.translation = vec(value, bone.translation.y, bone.translation.z)
+                "ty" -> bone.translation = vec(bone.translation.x, value, bone.translation.z)
+                "tz" -> bone.translation = vec(bone.translation.x, bone.translation.y, value)
+            }
+        }
+    }
 
     fun loadObj(obj: ReadableObj, objArmature: ObjArmature) {
         val bones = mutableListOf<Bone>()
@@ -143,6 +173,7 @@ class Armature(val name: String, val index: Int) {
         this.bones = bones
         this.rootBones = rootBones
         this.boneMap = bones.associateBy { it.name }
+        this.actObject = model.root.actions.getObject(this.name)
     }
 }
 

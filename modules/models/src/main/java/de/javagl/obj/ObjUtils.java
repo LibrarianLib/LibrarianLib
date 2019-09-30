@@ -134,7 +134,8 @@ public class ObjUtils
         ReadableObj input, T output)
     {
         output.setMtlFileNames(input.getMtlFileNames());
-        
+        output.setActFileNames(input.getActFileNames());
+
         addAll(input, output);
 
         for (int i=0; i<input.getNumFaces(); i++)
@@ -203,6 +204,7 @@ public class ObjUtils
         ObjArmatures.addToObj(input, output);
 
         output.setMtlFileNames(input.getMtlFileNames());
+        output.setActFileNames(input.getActFileNames());
 
         // vertexIndexMap[i] contains the index that vertex i of the 
         // original Obj will have in the output
@@ -477,6 +479,7 @@ public class ObjUtils
             ReadableObj input, DefaultObj output)
     {
         output.setMtlFileNames(input.getMtlFileNames());
+        output.setActFileNames(input.getActFileNames());
         addAll(input, output);
         Map<Integer, List<ObjFace>> vertexToFacesCache = new HashMap<>();
         Map<ObjFace, FloatTuple> faceNormalCache = new HashMap<>();
@@ -626,6 +629,7 @@ public class ObjUtils
         List<Integer> indexMapping, WritableObj output)
     {
         output.setMtlFileNames(input.getMtlFileNames());
+        output.setActFileNames(input.getActFileNames());
         addAll(input, output);
         
         int usedPropertyIndices[] = new int[input.getNumVertices()];
@@ -809,6 +813,7 @@ public class ObjUtils
         ObjArmatures.addToObj(input, output);
 
         output.setMtlFileNames(input.getMtlFileNames());
+        output.setActFileNames(input.getActFileNames());
         for (int i=0; i<input.getNumVertices(); i++)
         {
             output.addVertex(input.getVertex(i));
@@ -934,6 +939,7 @@ public class ObjUtils
         StringBuilder sb = new StringBuilder();
         sb.append("Obj:"+"\n");
         sb.append("    mtlFileNames     : "+obj.getMtlFileNames()+"\n");
+        sb.append("    actFileNames     : "+obj.getActFileNames()+"\n");
         sb.append("    numVertices      : "+obj.getNumVertices()+"\n");
         sb.append("    numTexCoords     : "+obj.getNumTexCoords()+"\n");
         sb.append("    numNormals       : "+obj.getNumNormals()+"\n");

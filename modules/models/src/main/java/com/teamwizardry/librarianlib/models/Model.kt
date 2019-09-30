@@ -28,12 +28,12 @@ class Model(val location: ResourceLocation) {
 
     init {
         reloadList.add(WeakReference(this))
-        load()
+        reload()
     }
 
     val default = ModelInstance(this)
 
-    private fun load() {
+    fun reload() {
         val objFile = Client.resourceManager.getResourceOrNull(location.resolveSibling(location.filename + ".obj"))
         if(objFile != null) {
             obj = objFile.inputStream.use {
@@ -81,7 +81,7 @@ class Model(val location: ResourceLocation) {
         internal fun reloadAll() {
             reloadList.removeIf { model ->
                 model.get()?.also {
-                    it.load()
+                    it.reload()
                 } == null
             }
         }

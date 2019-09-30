@@ -1,5 +1,6 @@
 package com.teamwizardry.librarianlib.models.testmod.models
 
+import com.teamwizardry.librarianlib.core.util.Client
 import com.teamwizardry.librarianlib.models.Armature
 import com.teamwizardry.librarianlib.models.ModelInstance
 import com.teamwizardry.librarianlib.models.ModelRenderer
@@ -26,7 +27,8 @@ open class ArmatureModel<S>(
     override fun render(entity: TestEntity, partialTicks: Float, state: ArmatureState<S>) {
         try {
             ModelRenderer.render(state.model)
-            ModelRenderer.renderArmatures(state.model)
+            if(Client.minecraft.renderManager.isDebugBoundingBox)
+                ModelRenderer.renderArmatures(state.model)
         } catch (e: Exception) {
             logger.error(e)
         }

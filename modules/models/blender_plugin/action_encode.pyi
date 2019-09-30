@@ -58,7 +58,7 @@ class Animation:
     def __init__(self, armature_object: Object, track: NlaTrack):
         pass
 
-    def get_curves(self) -> Dict[str, Curve]:
+    def get_curves(self) -> Dict[str, Dict[str, Curve]]:
         pass
 
 

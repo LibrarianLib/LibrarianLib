@@ -61,17 +61,21 @@ class LibModelsTestModule: TestMod("models", "Models", logger) {
             bones.forEach { it.rotation = quaternion }
         },
         ArmatureModel("steve", "Steve", { 0 }) { state ->
-            val cycle = sin((state.data / 40.0) * PI * 2)
-            val angle = Math.toRadians(cycle * 20)
-
-            val rot1 = Quaternion.fromAngleRadAxis(angle, 0.0, 0.0, 1.0)
-            val rot2 = Quaternion.fromAngleRadAxis(angle, 0.0, 0.0, -1.0)
             val armature = state.model["Armature"]
-            armature["Right_Arm"].rotation = rot1
-            armature["Left_Leg"].rotation = rot1
-            armature["Left_Arm"].rotation = rot2
-            armature["Right_Leg"].rotation = rot2
-            armature["Head"].rotation = Quaternion.fromAngleDegAxis(10.0, 0.0, 0.0, 1.0) * Quaternion.fromAngleRadAxis(angle, 0.0, 1.0, 0.0)
+
+            val cycle = sin((state.data / 40.0) * PI * 2)
+            val frame = state.data % 36
+            armature.startAction("fire_bow_walk")
+            armature.seekFrame(frame)
+//            val angle = Math.toRadians(cycle * 20)
+//
+//            val rot1 = Quaternion.fromAngleRadAxis(angle, 0.0, 0.0, 1.0)
+//            val rot2 = Quaternion.fromAngleRadAxis(angle, 0.0, 0.0, -1.0)
+//            armature["Right_Arm"].rotation = rot1
+//            armature["Left_Leg"].rotation = rot1
+//            armature["Left_Arm"].rotation = rot2
+//            armature["Right_Leg"].rotation = rot2
+//            armature["Head"].rotation = Quaternion.fromAngleDegAxis(10.0, 0.0, 0.0, 1.0) * Quaternion.fromAngleRadAxis(angle, 0.0, 1.0, 0.0)
 
             state.data++
         },
@@ -93,16 +97,23 @@ class LibModelsTestModule: TestMod("models", "Models", logger) {
         null
     )
 
+    val modelConfigs = mutableMapOf<TestEntityConfig, TestModel<*>>()
+
     init {
         +TestItem(TestItemConfig("reload_models", "Reload Entity Models") {
             client {
-                rightClick {
+                rightClickAir {
                     Model.reloadAll()
+                }
+                leftClickEntity {
+                    (entity as? TestEntity)?.config?.also { config ->
+                        modelConfigs[config]?.model?.reload()
+                    }
                 }
             }
         })
 
-        models.forEach { model ->
+        models.associateTo(modelConfigs) { model ->
             @Suppress("UNCHECKED_CAST")
             model as TestModel<Any?>
 
@@ -119,7 +130,7 @@ class LibModelsTestModule: TestMod("models", "Models", logger) {
                         model.render(entity, partialTicks, entity.state)
                     }
                 }
-            }
+            } to model
         }
     }
 }

@@ -1,6 +1,7 @@
 import textwrap
 from math import floor, ceil, isclose
 from typing import List, Tuple, Dict, Sequence
+import time
 
 import bpy
 from bpy.types import PoseBone, Object, NlaTrack
@@ -111,7 +112,14 @@ class Curve:
 class BoneState:
     def __init__(self, bone: PoseBone):
         self.name = bone.name
-        self.matrix = bone.matrix_basis.copy()
+        rest_inv = bone.bone.matrix_local.copy().inverted()
+        if bone.parent:
+            parent_inv = bone.parent.matrix.copy().inverted()
+            parent_rest = bone.parent.bone.matrix_local.copy()
+        else:
+            parent_inv = Matrix()
+            parent_rest = Matrix()
+        self.matrix = rest_inv * parent_rest * parent_inv * bone.matrix.copy()
 
     def get_channels(self) -> List[Tuple[str, float]]:
         relative_matrix = self.matrix
@@ -177,6 +185,8 @@ class Animation:
 
         for f in self.frame_range:
             bpy.context.scene.frame_set(f)
+            # Set the frame twice to fix IK: https://blenderartists.org/t/set-current-frame-in-export-script/610812/7
+            bpy.context.scene.frame_set(f)
             self.frames.append([BoneState(bone) for bone in armature_object.pose.bones])
 
         bpy.context.scene.frame_set(0)
@@ -185,7 +195,7 @@ class Animation:
         for pb in armature_object.pose.bones:
             pb.matrix_basis = Matrix()
 
-    def get_curves(self) -> Dict[str, Curve]:
+    def get_curves(self) -> Dict[str, Dict[str, Curve]]:
         start = self.frame_range.start
         bones = {}
         # _        bones: Dict[str, Dict[str, List[Sample]]] = {}
@@ -196,7 +206,7 @@ class Animation:
                 for channel, value in bone.get_channels():
                     curves.setdefault(channel, []).append(Sample(frame, value))
         all_curves = {}
-        # _        all_curves: Dict[str, Curve] = {}
+        # _        all_curves: Dict[str, Dict[str, Curve]] = {}
         for bone, curves in bones.items():
             for channel, samples in curves.items():
                 default_value = BoneState.default_channels[channel]

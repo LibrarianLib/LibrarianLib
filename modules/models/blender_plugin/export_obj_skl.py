@@ -22,6 +22,7 @@ import os
 
 import bpy
 import mathutils
+from mathutils import Matrix
 import bpy_extras.io_utils
 
 from progress_report import ProgressReport, ProgressReportSubstep
@@ -383,6 +384,8 @@ def write_file(filepath, objects, scene,
             armature_objects = []
 
             def add_armature(armature_object):
+                for pb in armature_object.pose.bones:
+                    pb.matrix_basis = Matrix()
                 armature = armature_object.data
                 if armature in armature_ids:
                     return
@@ -462,11 +465,23 @@ def write_file(filepath, objects, scene,
                             continue
                         # END NURBS
 
+
+                        ob_armature_modifiers = [modifier for modifier in ob.modifiers if
+                                                 isinstance(modifier, bpy.types.ArmatureModifier) and modifier.object]
+                        [add_armature(mod.object) for mod in ob_armature_modifiers if mod.object]
+                        armature_settings = [(mod, mod.use_bone_envelopes, mod.use_vertex_groups) for mod in ob_armature_modifiers]
+                        for mod in ob_armature_modifiers:
+                            mod.use_bone_envelopes = False
+                            mod.use_vertex_groups = False
                         try:
                             me = ob.to_mesh(scene, EXPORT_APPLY_MODIFIERS, calc_tessface=False,
                                             settings='RENDER' if EXPORT_APPLY_MODIFIERS_RENDER else 'PREVIEW')
                         except RuntimeError:
                             me = None
+                        finally:
+                            for (mod, be, vg) in armature_settings:
+                                mod.use_bone_envelopes = be
+                                mod.use_vertex_groups = vg
 
                         if me is None:
                             continue
@@ -578,9 +593,6 @@ def write_file(filepath, objects, scene,
                         subprogress2.step()
 
                         vertGroupNames = ob.vertex_groups.keys()
-                        ob_armature_modifiers = [modifier for modifier in ob.modifiers if
-                                                 isinstance(modifier, bpy.types.ArmatureModifier) and modifier.object]
-                        [add_armature(mod.object) for mod in ob_armature_modifiers if mod.object]
 
                         # Vert
                         for v in me_verts:
