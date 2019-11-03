@@ -382,6 +382,7 @@ def write_file(filepath, objects, scene,
             armature_ids = {}
             armature_bones = {}
             armature_objects = []
+            action_tracker = ActionTracker(scene)
 
             def add_armature(armature_object):
                 for pb in armature_object.pose.bones:
@@ -435,6 +436,8 @@ def write_file(filepath, objects, scene,
 
             # Get all meshes
             subprogress1.enter_substeps(len(objects))
+
+            [add_armature(ob) for ob in objects if ob.data and isinstance(ob.data, bpy.types.Armature)]
             for i, ob_main in enumerate(objects):
                 # ignore dupli children
                 if ob_main.parent and ob_main.parent.dupli_type in {'VERTS', 'FACES'}:
@@ -465,10 +468,8 @@ def write_file(filepath, objects, scene,
                             continue
                         # END NURBS
 
-
                         ob_armature_modifiers = [modifier for modifier in ob.modifiers if
                                                  isinstance(modifier, bpy.types.ArmatureModifier) and modifier.object]
-                        [add_armature(mod.object) for mod in ob_armature_modifiers if mod.object]
                         armature_settings = [(mod, mod.use_bone_envelopes, mod.use_vertex_groups) for mod in ob_armature_modifiers]
                         for mod in ob_armature_modifiers:
                             mod.use_bone_envelopes = False

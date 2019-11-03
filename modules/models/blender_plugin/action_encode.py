@@ -121,19 +121,14 @@ class BoneState:
             parent_rest = Matrix()
         self.matrix = rest_inv * parent_rest * parent_inv * bone.matrix.copy()
 
-    def get_channels(self) -> List[Tuple[str, float]]:
+    def get_channels(self) -> List[Tuple[str, Sequence[float]]]:
         relative_matrix = self.matrix
         translation = relative_matrix.translation
         rotation = relative_matrix.to_quaternion()
 
         return [
-            ('tx', translation.x),
-            ('ty', translation.y),
-            ('tz', translation.z),
-            ('rw', rotation.w),
-            ('rx', rotation.x),
-            ('ry', rotation.y),
-            ('rz', rotation.z),
+            ('pos', (translation.x, translation.y, translation.z)),
+            ('rot', (rotation.w, rotation.x, rotation.y, rotation.z)),
         ]
 
     def __repr__(self) -> str:
@@ -151,16 +146,6 @@ class BoneState:
         else:
             out += ' (%f, %f, %f, %f)' % (rotation.w, rotation.x, rotation.y, rotation.z)
         return out
-
-    default_channels = {
-        'tx': 0,
-        'ty': 0,
-        'tz': 0,
-        'rw': 1,
-        'rx': 0,
-        'ry': 0,
-        'rz': 0,
-    }
 
 
 class Animation:
@@ -195,25 +180,16 @@ class Animation:
         for pb in armature_object.pose.bones:
             pb.matrix_basis = Matrix()
 
-    def get_curves(self) -> Dict[str, Dict[str, Curve]]:
+    def get_curves(self) -> Dict[str, List[Curve]]:
         start = self.frame_range.start
-        bones = {}
+        curves = {}
         # _        bones: Dict[str, Dict[str, List[Sample]]] = {}
         for idx, states in enumerate(self.frames):
             frame = start + idx
             for bone in states:
-                curves = bones.setdefault(bone.name, {})
                 for channel, value in bone.get_channels():
-                    curves.setdefault(channel, []).append(Sample(frame, value))
-        all_curves = {}
-        # _        all_curves: Dict[str, Dict[str, Curve]] = {}
-        for bone, curves in bones.items():
-            for channel, samples in curves.items():
-                default_value = BoneState.default_channels[channel]
-                is_empty = all(isclose(it.value, default_value, rel_tol=Sample.precision) for it in samples)
-                if not is_empty:
-                    all_curves['%s.%s' % (bone, channel)] = Curve(samples)
-        return all_curves
+                    curves.setdefault('%s/%s' % (bone.name, channel), []).append(Sample(frame, value))
+        return curves
 
 
 def get_animations(armature_object: Object):
