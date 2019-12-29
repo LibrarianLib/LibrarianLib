@@ -35,7 +35,7 @@ object LibTestBaseModule : LibrarianLibModule("testbase", logger) {
     }
 
     override fun clientSetup(event: FMLClientSetupEvent) {
-        RenderingRegistry.registerEntityRenderingHandler(TestEntity::class.java) { TestEntityRenderer(it) }
+        RenderingRegistry.registerEntityRenderingHandler(TestEntity::class.java) { TestEntityDelegateRenderer(it) }
     }
 
     @SubscribeEvent

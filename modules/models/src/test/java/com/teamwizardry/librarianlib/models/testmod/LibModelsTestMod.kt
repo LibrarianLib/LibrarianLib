@@ -19,7 +19,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Mod("librarianlib-models-test")
-class LibModelsTestModule: TestMod("models", "Models", logger) {
+object LibrarianLibModelsTest: TestMod("models", "Models", logger) {
     val models = listOfNotNull<TestModel<*>>(
         SimpleModel("static", "Static model"),
         SimpleModel("static_textured", "Static textured model"),
@@ -125,7 +125,7 @@ class LibModelsTestModule: TestMod("models", "Models", logger) {
                     model.tickState(target.state)
                 }
 
-                renderer = object: TestEntityRenderer {
+                renderer = object: TestEntityRenderer() {
                     override fun render(entity: TestEntity, partialTicks: Float) {
                         model.render(entity, partialTicks, entity.state)
                     }

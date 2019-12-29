@@ -30,37 +30,11 @@ import kotlin.math.abs
 import kotlin.math.tan
 
 @OnlyIn(Dist.CLIENT)
-class TestEntityRenderer(renderManagerIn: EntityRendererManager): EntityRenderer<TestEntity>(renderManagerIn) {
+abstract class TestEntityRenderer {
     /**
      * Renders the desired `T` type Entity.
      */
-    override fun doRender(entity: TestEntity, x: Double, y: Double, z: Double, entityYaw: Float, partialTicks: Float) {
-        this.bindEntityTexture(entity)
-        GlStateManager.color4f(1.0f, 1.0f, 1.0f, 1.0f)
-        GlStateManager.disableTexture()
-        GlStateManager.pushMatrix()
-        GlStateManager.translatef(x.toFloat(), y.toFloat(), z.toFloat())
-//        GlStateManager.rotatef(MathHelper.lerp(partialTicks, entity.prevRotationYaw, entity.rotationYaw) - 90.0f, 0.0f, 1.0f, 0.0f)
-//        GlStateManager.rotatef(MathHelper.lerp(partialTicks, entity.prevRotationPitch, entity.rotationPitch), 0.0f, 0.0f, 1.0f)
-
-        if (this.renderOutlines) {
-            GlStateManager.enableColorMaterial()
-            GlStateManager.setupSolidRenderingTextureCombine(this.getTeamColor(entity))
-        }
-
-//        drawCube(entity)
-        renderOffsetAABB(entity.relativeBoundingBox, 0.0, 0.0, 0.0)
-        drawLook(entity, partialTicks)
-
-        if (this.renderOutlines) {
-            GlStateManager.tearDownSolidRenderingTextureCombine()
-            GlStateManager.disableColorMaterial()
-        }
-
-        GlStateManager.popMatrix()
-        GlStateManager.enableTexture()
-        super.doRender(entity, x, y, z, entityYaw, partialTicks)
-    }
+    abstract fun render(entity: TestEntity, partialTicks: Float)
 
     fun drawLook(entity: TestEntity, partialTicks: Float) {
         GlStateManager.disableTexture()
@@ -130,12 +104,5 @@ class TestEntityRenderer(renderManagerIn: EntityRendererManager): EntityRenderer
         vb.pos(+width/2, -height/2, +width/2).color(color).endVertex()
 
         tessellator.draw()
-    }
-
-    /**
-     * Returns the location of an entity's texture. Doesn't seem to be called unless you call Render.bindEntityTexture.
-     */
-    override fun getEntityTexture(entity: TestEntity): ResourceLocation? {
-        return ResourceLocation("missingno")
     }
 }

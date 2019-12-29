@@ -54,7 +54,7 @@ class TestEntityConfig(val id: String, val name: String, spawnerItemGroup: ItemG
     var clientFactory: SidedFunction.Client<World, TestEntity> = SidedFunction.Client { world ->
         TestEntity(this, world)
     }
-    var renderer: TestEntityRenderer = object: TestEntityRenderer {
+    var renderer: TestEntityRenderer = object: TestEntityRenderer() {
         override fun render(entity: TestEntity, partialTicks: Float) {
             EntityRenderer.renderOffsetAABB(entity.relativeBoundingBox, 0.0, 0.0, 0.0)
 

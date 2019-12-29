@@ -133,11 +133,14 @@ configure(allmodules) {
                 modId="librarianlib"
                 versionRange="[${rootProject.mod_version}]"
                 mandatory=true
-            [[dependencies.librarianlib-$project.name-test]]
-                modId="librarianlib-$project.name"
-                versionRange="[${rootProject.mod_version}]"
-                mandatory=true
         """.stripIndent()
+        if(project.path != ":core")
+            tomlString += """\
+                [[dependencies.librarianlib-$project.name-test]]
+                    modId="librarianlib-$project.name"
+                    versionRange="[${rootProject.mod_version}]"
+                    mandatory=true
+            """.stripIndent()
         if(project.path != ":testbase" && project.path != ":core")
             tomlString += """\
                 [[dependencies.librarianlib-$project.name-test]]
