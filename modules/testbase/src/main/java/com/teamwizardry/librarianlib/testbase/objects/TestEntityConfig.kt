@@ -17,6 +17,7 @@ import net.minecraft.entity.EntityClassification
 import net.minecraft.entity.EntityType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
+import net.minecraft.item.ItemGroup
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.CompoundNBT
 import net.minecraft.network.datasync.DataParameter
@@ -35,8 +36,8 @@ import org.lwjgl.opengl.GL11
 import java.awt.Color
 import kotlin.reflect.KProperty
 
-class TestEntityConfig(val id: String, val name: String): TestConfig() {
-    constructor(id: String, name: String, block: TestEntityConfig.() -> Unit): this(id, name) {
+class TestEntityConfig(val id: String, val name: String, spawnerItemGroup: ItemGroup): TestConfig() {
+    constructor(id: String, name: String, spawnerItemGroup: ItemGroup, block: TestEntityConfig.() -> Unit): this(id, name, spawnerItemGroup) {
         this.block()
     }
 
@@ -210,7 +211,7 @@ class TestEntityConfig(val id: String, val name: String): TestConfig() {
         player.world.addEntity(entity)
     }
 
-    var spawnerItem = TestItem(TestItemConfig(this.id + "_entity", this.name + " Entity") {
+    var spawnerItem = TestItem(TestItemConfig(this.id + "_entity", this.name + " Entity", spawnerItemGroup) {
         server {
             rightClick {
                 spawn(player)
