@@ -52,22 +52,17 @@ configure(allmodules) {
     apply from: "$rootDir/gradle/module.gradle"
 }
 
-
 // =====================================================================================================================
 // Build setup
 // =====================================================================================================================
 
-
 ext.productionModules = allmodules.findAll { it.name != "testbase" }
 
-// find a file in all the passed roots
-def findFiles(FileCollection roots, String path) {
-    return roots.collect { file(it.path + path) }.findAll { it.exists() }
+configurations {
+    runtime.extendsFrom(mod)
 }
 
 //region Merged file generation
-
-
 
 // Generated files:
 // - MixinConnector.java
@@ -142,7 +137,7 @@ task generateFiles(type: Sync) {
         packMcmetaOut.text = corePackMcmeta.text
 
         if(project.name != "core")
-            // add additional external dependencies to main mods.toml
+        // add additional external dependencies to main mods.toml
             modsTomlOut.text = coreModsToml.text + allDependencies
                     .filter { it.exists() }
                     .collect {
@@ -287,8 +282,9 @@ configure(productionModules + [project]) {
                     // Remove the forge dependencies from the POM
                     withXml {
                         def node = asNode()
+                        def excludes = ['net.minecraftforge', 'll']
                         node.dependencies.'*'.findAll {
-                            it.groupId.text() == 'net.minecraftforge'
+                            excludes.contains(it.groupId.text())
                         }.each {
                             it.parent().remove(it)
                         }

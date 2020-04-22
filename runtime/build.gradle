@@ -8,16 +8,25 @@ minecraft {
     mappings channel: mc_mappings_channel, version: mc_mappings_version
 }
 
-
 dependencies {
     minecraft "net.minecraftforge:forge:$mc_version-$forge_version"
-    mod "mixinbootstrap:MixinBootstrap:1.0.2"
+    mod "kottle:Kottle:$kottle_version"
+    mod "mixinbootstrap:MixinBootstrap:$mixinbootstrap_version"
     allmodules.each {
         mod project(path: it.path, configuration: "mod")
     }
 
     // we have to include ICU in the classpath so it overrides Mojang's stripped down copy
     implementation 'com.ibm.icu:icu4j:63.1' // for the gui module
+}
+
+afterEvaluate {
+    rootProject.dependencies {
+        configurations.mod.allDependencies.each { dep ->
+            if(dep instanceof ExternalModuleDependency)
+                mod dep.copy()
+        }
+    }
 }
 
 // we need all the modules to compile first
