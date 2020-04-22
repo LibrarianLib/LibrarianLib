@@ -399,9 +399,13 @@ jar {
     enabled = false
 }
 
-reobf {
-    obfJar
+afterEvaluate {
+    reobfJar {
+        enabled = false
+    }
 }
+
+reobf.create("obfJar")
 
 assemble.dependsOn obfJar, deobfJar, sourcesJar
 
