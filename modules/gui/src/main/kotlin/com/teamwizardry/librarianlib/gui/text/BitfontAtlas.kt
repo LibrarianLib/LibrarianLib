@@ -4,8 +4,8 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.teamwizardry.librarianlib.core.util.Client
 import com.teamwizardry.librarianlib.math.Rect2d
 import com.teamwizardry.librarianlib.math.rect
-import dev.thecodewarrior.bitfont.data.BitGrid
-import dev.thecodewarrior.bitfont.utils.RectanglePacker
+import ll.dev.thecodewarrior.bitfont.data.BitGrid
+import ll.dev.thecodewarrior.bitfont.utils.RectanglePacker
 import net.minecraft.client.renderer.texture.NativeImage
 import net.minecraft.client.renderer.texture.Texture
 import net.minecraft.client.renderer.texture.TextureManager

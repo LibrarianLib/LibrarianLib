@@ -1,6 +1,6 @@
 package com.teamwizardry.librarianlib.gui.text
 
-import dev.thecodewarrior.bitfont.data.Bitfont
+import ll.dev.thecodewarrior.bitfont.data.Bitfont
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import it.unimi.dsi.fastutil.ints.IntSet

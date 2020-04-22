@@ -3,8 +3,8 @@ package com.teamwizardry.librarianlib.math
 import com.teamwizardry.librarianlib.core.bridge.IMatrix4f
 import com.teamwizardry.librarianlib.core.util.kotlin.obf
 import com.teamwizardry.librarianlib.core.util.kotlin.threadLocal
-import dev.thecodewarrior.mirror.Mirror
-import dev.thecodewarrior.mirror.member.FieldMirror
+import ll.dev.thecodewarrior.mirror.Mirror
+import ll.dev.thecodewarrior.mirror.member.FieldMirror
 import net.minecraft.client.renderer.Matrix3f
 import net.minecraft.client.renderer.Matrix4f
 import net.minecraft.util.math.Vec3d

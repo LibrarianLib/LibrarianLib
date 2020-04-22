@@ -1,6 +1,5 @@
 package com.teamwizardry.librarianlib
 
-import com.google.gson.Gson
 import com.teamwizardry.librarianlib.core.bridge.ASMEnvCheckTarget
 import com.teamwizardry.librarianlib.core.bridge.MixinEnvCheckTarget
 import net.minecraftforge.fml.common.Mod

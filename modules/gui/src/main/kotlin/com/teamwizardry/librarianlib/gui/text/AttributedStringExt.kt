@@ -1,9 +1,9 @@
 @file:JvmName("AttributedStringUtils")
 package com.teamwizardry.librarianlib.gui.text
 
-import dev.thecodewarrior.bitfont.typesetting.AttributedString
-import dev.thecodewarrior.bitfont.typesetting.MutableAttributedString
-import dev.thecodewarrior.bitfont.utils.Attribute
+import ll.dev.thecodewarrior.bitfont.typesetting.AttributedString
+import ll.dev.thecodewarrior.bitfont.typesetting.MutableAttributedString
+import ll.dev.thecodewarrior.bitfont.utils.Attribute
 import java.awt.Color
 
 private fun String.splitWithDelimiters(regex: String) = this.split("((?<=$regex)|(?=$regex))".toRegex())

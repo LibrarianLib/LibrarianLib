@@ -5,7 +5,7 @@ import com.teamwizardry.librarianlib.particles.bindings.StoredBinding
 import com.teamwizardry.librarianlib.particles.bindings.VariableBinding
 import com.teamwizardry.librarianlib.particles.modules.DepthSortModule
 import net.minecraft.client.renderer.Matrix4f
-import org.magicwerk.brownies.collections.GapList
+import ll.org.magicwerk.brownies.collections.GapList
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean

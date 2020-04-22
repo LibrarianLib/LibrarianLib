@@ -5,13 +5,13 @@ import com.teamwizardry.librarianlib.gui.component.GuiLayer
 import com.teamwizardry.librarianlib.gui.text.BitfontRenderer
 import com.teamwizardry.librarianlib.gui.text.Fonts
 import com.teamwizardry.librarianlib.gui.value.IMValue
-import dev.thecodewarrior.bitfont.typesetting.AttributedString
-import dev.thecodewarrior.bitfont.typesetting.MutableAttributedString
-import dev.thecodewarrior.bitfont.typesetting.TextContainer
-import dev.thecodewarrior.bitfont.typesetting.TextLayoutManager
-import dev.thecodewarrior.bitfont.utils.Attribute
-import dev.thecodewarrior.bitfont.utils.Vec2i
-import dev.thecodewarrior.mirror.Mirror
+import ll.dev.thecodewarrior.bitfont.typesetting.AttributedString
+import ll.dev.thecodewarrior.bitfont.typesetting.MutableAttributedString
+import ll.dev.thecodewarrior.bitfont.typesetting.TextContainer
+import ll.dev.thecodewarrior.bitfont.typesetting.TextLayoutManager
+import ll.dev.thecodewarrior.bitfont.utils.Attribute
+import ll.dev.thecodewarrior.bitfont.utils.Vec2i
+import ll.dev.thecodewarrior.mirror.Mirror
 import net.minecraft.client.Minecraft
 import java.awt.Color
 

@@ -1,9 +1,9 @@
 package com.teamwizardry.librarianlib.utilities.eventbus
 
 import com.teamwizardry.librarianlib.core.util.kotlin.IS_DEOBFUSCATED
-import dev.thecodewarrior.mirror.Mirror
-import dev.thecodewarrior.mirror.member.MethodMirror
-import dev.thecodewarrior.mirror.type.TypeMirror
+import ll.dev.thecodewarrior.mirror.Mirror
+import ll.dev.thecodewarrior.mirror.member.MethodMirror
+import ll.dev.thecodewarrior.mirror.type.TypeMirror
 import java.lang.reflect.Method
 
 /**

@@ -1,6 +1,6 @@
 package com.teamwizardry.librarianlib.gui.text
 
-import dev.thecodewarrior.bitfont.utils.Attribute
+import ll.dev.thecodewarrior.bitfont.utils.Attribute
 import java.awt.Color
 
 private val colorAttr = Attribute.get<Color>("color")

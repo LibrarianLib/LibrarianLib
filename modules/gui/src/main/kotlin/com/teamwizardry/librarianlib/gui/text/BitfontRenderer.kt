@@ -7,12 +7,11 @@ import com.teamwizardry.librarianlib.core.util.kotlin.color
 import com.teamwizardry.librarianlib.core.util.kotlin.pos2d
 import com.teamwizardry.librarianlib.core.util.kotlin.tex
 import com.teamwizardry.librarianlib.math.Matrix3d
-import dev.thecodewarrior.bitfont.typesetting.LineFragment
-import dev.thecodewarrior.bitfont.typesetting.TextContainer
-import dev.thecodewarrior.bitfont.typesetting.TextLayoutManager
-import dev.thecodewarrior.bitfont.typesetting.TypesetGlyph
-import dev.thecodewarrior.bitfont.typesetting.font
-import dev.thecodewarrior.bitfont.utils.Attribute
+import ll.dev.thecodewarrior.bitfont.typesetting.LineFragment
+import ll.dev.thecodewarrior.bitfont.typesetting.TextContainer
+import ll.dev.thecodewarrior.bitfont.typesetting.TextLayoutManager
+import ll.dev.thecodewarrior.bitfont.typesetting.TypesetGlyph
+import ll.dev.thecodewarrior.bitfont.utils.Attribute
 import net.minecraft.client.renderer.IRenderTypeBuffer
 import net.minecraft.client.renderer.Tessellator
 import java.awt.Color

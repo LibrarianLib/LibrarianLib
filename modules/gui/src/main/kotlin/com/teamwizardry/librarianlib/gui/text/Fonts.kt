@@ -3,7 +3,7 @@ package com.teamwizardry.librarianlib.gui.text
 import com.teamwizardry.librarianlib.core.util.Client
 import com.teamwizardry.librarianlib.core.util.ISimpleReloadListener
 import com.teamwizardry.librarianlib.core.util.kotlin.toRl
-import dev.thecodewarrior.bitfont.data.Bitfont
+import ll.dev.thecodewarrior.bitfont.data.Bitfont
 import net.minecraft.profiler.IProfiler
 import net.minecraft.resources.IResourceManager
 import net.minecraft.util.ResourceLocation
