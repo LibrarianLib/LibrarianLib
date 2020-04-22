@@ -1,0 +1,182 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        // rolled back from 4.0.4 to 4.0.1 due to #425: https://github.com/johnrengelman/shadow/issues/425
+        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.1'
+    }
+}
+
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.github.jengelman.gradle.plugins.shadow.ShadowStats
+import com.github.jengelman.gradle.plugins.shadow.relocation.RelocatePathContext
+import com.github.jengelman.gradle.plugins.shadow.relocation.Relocator
+import com.github.jengelman.gradle.plugins.shadow.relocation.RelocatePathContext
+import com.github.jengelman.gradle.plugins.shadow.transformers.Transformer
+import com.github.jengelman.gradle.plugins.shadow.transformers.TransformerContext
+import shadow.org.apache.tools.zip.ZipEntry
+import shadow.org.apache.tools.zip.ZipOutputStream
+
+def relocatedDependencyDir = "${rootProject.buildDir}/relocated"
+
+configurations {
+    shade
+    api.extendsFrom(remapped)
+    testApi.extendsFrom(remapped)
+}
+
+//// this shows a compilation error in IDEA because the `modifyOutputStream` sources specify the non-shadowed
+//// `ZipOutputStream`, but the actual plugin uses the shadowed version.
+//class SourceRelocateTransformer implements Transformer {
+//    private Map<String, String> files = new HashMap<>()
+//
+//    @Override
+//    boolean canTransformResource(FileTreeElement element) {
+//        return !element.name.endsWith('.class')
+//    }
+//
+//    @Override
+//    void transform(TransformerContext context) {
+//        def text = context.is.text
+//        def targetPath = context.path
+//        context.relocators.each { rel ->
+//            def pathContext = new RelocatePathContext(targetPath, context.stats)
+//            if(rel.canRelocatePath(pathContext)) {
+//                text = rel.applyToSourceContent(text)
+//            }
+//        }
+//        files[targetPath] = text
+//    }
+//
+//    @Override
+//    boolean hasTransformedResource() {
+//        return files.size() > 0
+//    }
+//
+//    void modifyOutputStream(ZipOutputStream jos, boolean preserveFileTimestamps) {
+//        files.each { String path, String text ->
+//            ZipEntry entry = new ZipEntry(path)
+//            entry.time = TransformerContext.getEntryTimestamp(preserveFileTimestamps, entry.time)
+//            jos.putNextEntry(entry)
+//            jos.write(text.getBytes("UTF-8"))
+//            jos.closeEntry()
+//        }
+//    }
+//}
+
+task remapDependencies(type: ShadowJar) {
+    configurations = [project.configurations.shade]
+
+//    transform(SourceRelocateTransformer.class)
+    archiveName("shadow-${project.name}.jar")
+    destinationDir(file(relocatedDependencyDir))
+
+    afterEvaluate {
+        rootProject.shadePackages.each { String pkg ->
+            relocate pkg, "ll.$pkg"
+        }
+    }
+}
+
+task remapDependencySources(type: Jar) {
+    inputs.files(project.configurations.shade)
+
+    archiveName("shadow-${project.name}-sources.jar")
+    destinationDir(file(relocatedDependencyDir))
+
+    afterEvaluate {
+
+        from configurations.detachedConfiguration(
+                configurations.shade.allDependencies.collect({ dep ->
+                    def sourceDep = dependencies.create(group: dep.group,
+                            name: dep.name,
+                            classifier: 'sources',
+                            version: dep.version)
+                    // apply any exclusions from the main dependency to the sources dependency
+                    if (dep instanceof ModuleDependency && sourceDep instanceof ModuleDependency) {
+                        def originalModule = (ModuleDependency) dep
+                        def sourceModule = (ModuleDependency) sourceDep
+
+                        originalModule.excludeRules.each {
+                            sourceModule.exclude group: it.group, module: it.module
+                        }
+                    }
+                    return sourceDep
+                }) as Dependency[]).collect { f ->
+            f.directory ? fileTree(f) : zipTree(f)
+        }
+        def stats = new ShadowStats()
+        // remap sources
+        eachFile { FileCopyDetails copyDetails ->
+            remapDependencies.relocators.each { Relocator reloc ->
+                def pathContext = new RelocatePathContext(copyDetails.sourcePath, stats)
+                if (reloc.canRelocatePath(pathContext)) {
+                    copyDetails.path = reloc.relocatePath(pathContext)
+                }
+                if (!copyDetails.directory)
+                    copyDetails.filter { String line ->
+                        reloc.applyToSourceContent(line)
+                    }
+            }
+        }
+    }
+}
+
+task setupShadowJars {
+    dependsOn remapDependencies, remapDependencySources
+}
+
+repositories {
+    flatDir {
+        dir(relocatedDependencyDir)
+    }
+}
+
+dependencies {
+    files(remapDependencies.outputs.files.singleFile) {
+        builtBy 'remapDependencies'
+    }
+    if(file("$relocatedDependencyDir/shadow-${project.name}.jar").exists()) {
+        remapped "ll:shadow-${project.name}:0"
+    }
+}
+
+//task remapDeps {
+////    inputs.property("relocatePackages", rootProject.shadePackages)
+////    inputs.files(configurations.remap)
+//    doLast {}
+//
+//    afterEvaluate {
+//        configurations.remap.allArtifacts.each { artifact ->
+//            if(artifact.extension == "jar" || artifact.extension == "zip") {
+//                tasks.create(artifact.name, ShadowJar.class) {
+//                    rootProject.shadePackages.each { String pkg ->
+//                        relocate pkg, "ll.$pkg"
+//                    }
+//                    from(artifact)
+//                    transform(SourceRelocateTransformer.class)
+//                    archiveName("ll-" + artifact.file.name)
+//                    destinationDir(file(relocatedDependencyDir))
+//                }
+//            } else {
+//                tasks.create(artifact.name, Copy.class) {
+//                    from(files(artifact.file))
+//                    into new File(relocatedDependencyDir, "ll-" + artifact.file.name)
+//                }
+//            }
+//            dependsOn(artifact.name)
+//        }
+////        configurations.remap.resolvedConfiguration.lenientConfiguration.allModuleDependencies
+//    }
+//}
+
+// https://github.com/MinecraftForge/ForgeGradle/blob/a825903853af7479f9546e719fd861d287991d87/src/userdev/java/net/minecraftforge/gradle/userdev/DependencyManagementExtension.java#L44
+Dependency addRelocate(Object dependency, Closure configure) {
+    Dependency baseDependency = project.getDependencies().create(dependency, configure);
+    project.getConfigurations().getByName(UserDevPlugin.OBF).getDependencies().add(baseDependency);
+    Dependency sourceDependency = project.getDependencies().create(baseDependency.getGroup() + ":" + baseDependency.getName() + ":" + baseDependency.getVersion() + ":sources", configure);
+    project.getConfigurations().getByName(UserDevPlugin.OBF).getDependencies().add(sourceDependency);
+
+    return remapper.remap(baseDependency);
+}

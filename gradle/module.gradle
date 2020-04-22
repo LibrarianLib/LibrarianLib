@@ -23,7 +23,6 @@ import com.github.jengelman.gradle.plugins.shadow.ShadowStats
 import com.github.jengelman.gradle.plugins.shadow.relocation.RelocatePathContext
 import com.github.jengelman.gradle.plugins.shadow.relocation.Relocator
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import net.minecraftforge.gradle.userdev.tasks.RenameJar
 
 ext.modid = project.name == "core" ? "librarianlib" : "librarianlib-${project.name}".toString()
 ext.modid_test = "$modid-test".toString()
@@ -35,11 +34,10 @@ group = "com.teamwizardry.librarianlib"
 archivesBaseName = modid
 
 configurations {
-    api.extendsFrom(shade)
-    testApi.extendsFrom(shade)
     api.extendsFrom(mod)
     testApi.extendsFrom(mod)
 }
+apply from: "$rootDir/gradle/relocate.gradle"
 
 minecraft {
     mappings channel: mc_mappings_channel, version: mc_mappings_version
@@ -338,14 +336,12 @@ def shadeOutput = file("$buildDir/shade/main")
 // https://github.com/MinecraftForge/ForgeGradle/blob/ccf3035ba1f435f0f1a685a70d85df5481ee8b73/src/common/java/net/minecraftforge/gradle/common/util/runs/RunConfigGenerator.java#L138
 ((ConfigurableFileCollection)sourceSets.main.output.classesDirs).from(shadeOutput)
 
-afterEvaluate {
-    task copyShadeClasses(type: Sync) {
-        into shadeOutput
-        from configurations.shade.collect { zipTree(it) }
-        exclude 'META-INF', 'META-INF/**'
-    }
-    compileJava.finalizedBy(copyShadeClasses)
+task copyShadeClasses(type: Sync) {
+    dependsOn remapDependencies
+    into shadeOutput
+    from zipTree(remapDependencies.archivePath)
 }
+compileJava.finalizedBy(copyShadeClasses)
 //endregion
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -363,38 +359,31 @@ def attributes = [
 ]
 
 task sourcesJar(type: Jar) {
+    dependsOn remapDependencySources, processResources
     classifier = 'sources'
     includeEmptyDirs = false
     manifest.attributes(attributes)
     from sourceSets.main.allSource
     from sourceSets.main.output.resourcesDir
-    dependsOn processResources
+    from zipTree(remapDependencySources.archivePath)
     exclude '**/*.class'
 }
 
-task deobfJar(type: ShadowJar) {
-    configurations = []
+task deobfJar(type: Jar) {
+    dependsOn classes, processResources, remapDependencies
     classifier = ''
     includeEmptyDirs = false
     manifest.attributes(attributes)
 
     from sourceSets.main.output
-    dependsOn classes
-    dependsOn processResources
-
-    afterEvaluate {
-        // add relocation rules after all the projects have added their packages to the list
-        rootProject.shadePackages.each {
-            relocate it, "ll.$it"
-        }
-    }
+    from zipTree(remapDependencies.archivePath)
 }
 
 task obfJar(type: Jar) {
-    dependsOn deobfJar
+    dependsOn classes, processResources, remapDependencies
     classifier = 'obf'
     manifest.attributes(attributes)
-    from zipTree(deobfJar.archivePath)
+    from zipTree(remapDependencies.archivePath)
 }
 
 jar {
@@ -407,47 +396,47 @@ reobf {
 
 assemble.dependsOn obfJar, deobfJar, sourcesJar
 
-// create a sources jar that includes this module and the shaded dependencies
-// Based largely on the gradle-preshadow-plugin: https://github.com/Abnaxos/gradle-preshadow-plugin/blob/07580f93f38818b15c411f6c47abea8cdfd0b2f9/src/main/groovy/ch/raffael/gradlePlugins/preshadow/Preshadow.groovy
-// has to be run in afterEvaluate since the relocator package list isn't ready until all the modules are configured
-afterEvaluate {
-    sourcesJar {
-        // collect the sources for all the shade dependencies
-        from configurations.detachedConfiguration(
-                configurations.shade.allDependencies.collect({ dep ->
-                    def sourceDep = dependencies.create(group: dep.group,
-                            name: dep.name,
-                            classifier: 'sources',
-                            version: dep.version)
-                    // apply any exclusions from the main dependency to the sources dependency
-                    if (dep instanceof ModuleDependency && sourceDep instanceof ModuleDependency) {
-                        def originalModule = (ModuleDependency) dep
-                        def sourceModule = (ModuleDependency) sourceDep
-
-                        originalModule.excludeRules.each {
-                            sourceModule.exclude group: it.group, module: it.module
-                        }
-                    }
-                    return sourceDep
-                }) as Dependency[]).collect { f ->
-            f.directory ? fileTree(f) : zipTree(f)
-        }
-        def stats = new ShadowStats()
-        // remap sources
-        eachFile { FileCopyDetails copyDetails ->
-            deobfJar.relocators.each { Relocator reloc ->
-                def pathContext = new RelocatePathContext(copyDetails.sourcePath, stats)
-                if (reloc.canRelocatePath(pathContext)) {
-                    copyDetails.path = reloc.relocatePath(pathContext)
-                }
-                if (!copyDetails.directory)
-                    copyDetails.filter { String line ->
-                        reloc.applyToSourceContent(line)
-                    }
-            }
-        }
-    }
-}
+//// create a sources jar that includes this module and the shaded dependencies
+//// Based largely on the gradle-preshadow-plugin: https://github.com/Abnaxos/gradle-preshadow-plugin/blob/07580f93f38818b15c411f6c47abea8cdfd0b2f9/src/main/groovy/ch/raffael/gradlePlugins/preshadow/Preshadow.groovy
+//// has to be run in afterEvaluate since the relocator package list isn't ready until all the modules are configured
+//afterEvaluate {
+//    sourcesJar {
+//        // collect the sources for all the shade dependencies
+//        from configurations.detachedConfiguration(
+//                configurations.shade.allDependencies.collect({ dep ->
+//                    def sourceDep = dependencies.create(group: dep.group,
+//                            name: dep.name,
+//                            classifier: 'sources',
+//                            version: dep.version)
+//                    // apply any exclusions from the main dependency to the sources dependency
+//                    if (dep instanceof ModuleDependency && sourceDep instanceof ModuleDependency) {
+//                        def originalModule = (ModuleDependency) dep
+//                        def sourceModule = (ModuleDependency) sourceDep
+//
+//                        originalModule.excludeRules.each {
+//                            sourceModule.exclude group: it.group, module: it.module
+//                        }
+//                    }
+//                    return sourceDep
+//                }) as Dependency[]).collect { f ->
+//            f.directory ? fileTree(f) : zipTree(f)
+//        }
+//        def stats = new ShadowStats()
+//        // remap sources
+//        eachFile { FileCopyDetails copyDetails ->
+//            deobfJar.relocators.each { Relocator reloc ->
+//                def pathContext = new RelocatePathContext(copyDetails.sourcePath, stats)
+//                if (reloc.canRelocatePath(pathContext)) {
+//                    copyDetails.path = reloc.relocatePath(pathContext)
+//                }
+//                if (!copyDetails.directory)
+//                    copyDetails.filter { String line ->
+//                        reloc.applyToSourceContent(line)
+//                    }
+//            }
+//        }
+//    }
+//}
 
 //endregion
 // ---------------------------------------------------------------------------------------------------------------------

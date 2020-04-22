@@ -15,6 +15,9 @@ buildscript {
     }
 }
 
+// this is populated by the modules, since the modules need to know about each other's relocation packages
+ext.shadePackages = new HashSet<String>()
+
 allprojects {
     apply plugin: 'eclipse'
     apply plugin: 'idea'
@@ -45,12 +48,16 @@ configure(allmodules) {
     apply from: "$rootDir/gradle/module.gradle"
 }
 
+task setupShadowJars {
+    allmodules.each {
+        dependsOn it.setupShadowJars
+    }
+}
+
 // =====================================================================================================================
 // Build setup
 // =====================================================================================================================
 
-// this is populated by the modules, since the modules need to know about each other's relocation packages
-ext.shadePackages = new HashSet<String>()
 
 ext.productionModules = allmodules.findAll { it.name != "testbase" }
 
