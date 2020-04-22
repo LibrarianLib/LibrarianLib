@@ -13,7 +13,9 @@ import com.github.jengelman.gradle.plugins.shadow.ShadowStats
 import com.github.jengelman.gradle.plugins.shadow.relocation.Relocator
 import com.github.jengelman.gradle.plugins.shadow.relocation.RelocatePathContext
 
-def relocatedDependencyDir = "${rootProject.buildDir}/relocated"
+def remappedRepo = "${rootProject.buildDir}/remapped"
+def ivyModuleName = "shadow-${project.name}"
+def remappedModuleDir = "$remappedRepo/$ivyModuleName"
 
 configurations {
     shade
@@ -29,24 +31,29 @@ def capName = project.name[0].toUpperCase() + project.name.substring(1)
 ext.remapDependencies = rootProject.tasks.create("remap${capName}Dependencies", ShadowJar.class) {
     configurations = [moduleProject.configurations.shade]
 
-    archiveName("shadow-${moduleProject.name}.jar")
-    destinationDir(file(relocatedDependencyDir))
+    archiveName("${ivyModuleName}-jar.jar")
+    destinationDir(file(remappedModuleDir))
 
     afterEvaluate {
+        inputs.property("shadePackages", rootProject.shadePackages)
         rootProject.shadePackages.each { String pkg ->
             relocate pkg, "ll.$pkg"
         }
     }
 }
 
+def emptyJar = file("$rootProject.buildDir/tmp/emptyJar")
 ext.remapDependencySources = rootProject.tasks.create("remap${capName}DependencySources", Jar.class) {
     inputs.files(moduleProject.configurations.shade)
 
-    archiveName("shadow-${moduleProject.name}-sources.jar")
-    destinationDir(file(relocatedDependencyDir))
+    archiveName("${ivyModuleName}-source.jar")
+    destinationDir(file(remappedModuleDir))
+
+    // we need to make sure there's always something in the sources zip so it'll always generate
+//    from emptyJar
 
     afterEvaluate {
-
+        inputs.property("shadePackages", rootProject.shadePackages)
         from moduleProject.configurations.detachedConfiguration(
                 moduleProject.configurations.shade.allDependencies.collect({ dep ->
                     def sourceDep = moduleProject.dependencies.create(group: dep.group,
@@ -84,19 +91,43 @@ ext.remapDependencySources = rootProject.tasks.create("remap${capName}Dependency
 }
 
 task setupShadowJars {
-    dependsOn moduleProject.remapDependencies, moduleProject.remapDependencySources
+    finalizedBy remapDependencies, remapDependencySources
+    doLast {
+        file(remappedModuleDir).mkdirs()
+        file(remappedModuleDir + "/ivy.xml").text = """\
+        |<ivy-module version="2.0">
+        |  <info organisation="ll" module="${ivyModuleName}" revision="0"/>
+        |  <publications>
+        |    <artifact/>
+        |    <artifact type="source" ext="jar"/>
+        |  </publications>
+        |</ivy-module>
+        |""".stripMargin()
+
+        def emptyManifest = file(emptyJar.path + "/META-INF/MANIFEST.MF")
+        emptyManifest.parentFile.mkdirs()
+        if(!emptyManifest.exists())
+            emptyManifest.text = "Manifest-Version: 1.0\n"
+    }
 }
 
 rootProject.setupShadowJars.dependsOn setupShadowJars
 
 repositories {
-    flatDir {
-        dir(relocatedDependencyDir)
+//    flatDir {
+//        dir(relocatedDependencyDir)
+//    }
+    ivy {
+        url remappedRepo
+        layout("pattern") {
+            artifact '[module]/[artifact](-[type]).[ext]'
+            ivy '[module]/ivy.xml'
+        }
     }
 }
 
 dependencies {
-    if(file("$relocatedDependencyDir/shadow-${project.name}.jar").exists()) {
-        remapped "ll:shadow-${project.name}:0"
+    if(remapDependencies.archivePath.exists()) {
+        remapped "ll:$ivyModuleName:0"
     }
 }
