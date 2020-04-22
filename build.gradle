@@ -44,15 +44,13 @@ archivesBaseName = "librarianlib"
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
+task setupShadowJars {
+}
+
 configure(allmodules) {
     apply from: "$rootDir/gradle/module.gradle"
 }
 
-task setupShadowJars {
-    allmodules.each {
-        dependsOn it.setupShadowJars
-    }
-}
 
 // =====================================================================================================================
 // Build setup
