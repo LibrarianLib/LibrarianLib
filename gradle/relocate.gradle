@@ -13,7 +13,7 @@ import com.github.jengelman.gradle.plugins.shadow.ShadowStats
 import com.github.jengelman.gradle.plugins.shadow.relocation.Relocator
 import com.github.jengelman.gradle.plugins.shadow.relocation.RelocatePathContext
 
-def remappedRepo = "${rootProject.buildDir}/remapped"
+def remappedRepo = "$rootDir/.gradle/remapped-cache"
 def ivyModuleName = "shadow-${project.name}"
 def remappedModuleDir = "$remappedRepo/$ivyModuleName"
 
@@ -29,7 +29,9 @@ def capName = project.name[0].toUpperCase() + project.name.substring(1)
 // the remap tasks have to be added to the root project, otherwise MixinGradle tries to add refmaps, which makes them
 // depend on the compile tasks, which means we wouldn't be able to create the shadowed jars if the build is erroring
 ext.remapDependencies = rootProject.tasks.create("remap${capName}Dependencies", ShadowJar.class) {
+    group = 'librarianlib'
     configurations = [moduleProject.configurations.shade]
+    duplicatesStrategy = DuplicatesStrategy.WARN
 
     archiveName("${ivyModuleName}-jar.jar")
     destinationDir(file(remappedModuleDir))
@@ -42,9 +44,10 @@ ext.remapDependencies = rootProject.tasks.create("remap${capName}Dependencies", 
     }
 }
 
-def emptyJar = file("$rootProject.buildDir/tmp/emptyJar")
 ext.remapDependencySources = rootProject.tasks.create("remap${capName}DependencySources", Jar.class) {
+    group = 'librarianlib'
     inputs.files(moduleProject.configurations.shade)
+    duplicatesStrategy = DuplicatesStrategy.WARN
 
     archiveName("${ivyModuleName}-source.jar")
     destinationDir(file(remappedModuleDir))
@@ -91,6 +94,7 @@ ext.remapDependencySources = rootProject.tasks.create("remap${capName}Dependency
 }
 
 task setupShadowJars {
+    group = 'librarianlib'
     finalizedBy remapDependencies, remapDependencySources
     doLast {
         file(remappedModuleDir).mkdirs()
@@ -103,20 +107,12 @@ task setupShadowJars {
         |  </publications>
         |</ivy-module>
         |""".stripMargin()
-
-        def emptyManifest = file(emptyJar.path + "/META-INF/MANIFEST.MF")
-        emptyManifest.parentFile.mkdirs()
-        if(!emptyManifest.exists())
-            emptyManifest.text = "Manifest-Version: 1.0\n"
     }
 }
 
 rootProject.setupShadowJars.dependsOn setupShadowJars
 
 repositories {
-//    flatDir {
-//        dir(relocatedDependencyDir)
-//    }
     ivy {
         url remappedRepo
         layout("pattern") {

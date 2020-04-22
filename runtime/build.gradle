@@ -35,6 +35,7 @@ allmodules.each {
 //   java.nio.file.NoSuchFileException: <<project dir>>/modules/utilities/build/classes/java/test
 //       at sun.nio.fs.UnixException.translateToIOException(UnixException.java:86) ~[?:1.8.0_181] {}
 task(createEmptyMainOutputDirs).doLast {
+    group = 'librarianlib'
     allmodules.each { module ->
         module.sourceSets.main.output.each {
             it.mkdirs()
@@ -42,6 +43,7 @@ task(createEmptyMainOutputDirs).doLast {
     }
 }
 task(createEmptyTestOutputDirs).doLast {
+    group = 'librarianlib'
     allmodules.each { module ->
         module.sourceSets.test.output.each {
             it.mkdirs()
@@ -52,6 +54,7 @@ processResources.finalizedBy(createEmptyMainOutputDirs)
 processTestResources.finalizedBy(createEmptyTestOutputDirs)
 
 task copyLibModJars(type: Sync) {
+    group = 'librarianlib'
     into project.file('run/mods')
     from project.file('mods')
     from configurations.mod

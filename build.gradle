@@ -45,6 +45,7 @@ archivesBaseName = "librarianlib"
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
 task setupShadowJars {
+    group = 'librarianlib'
 }
 
 configure(allmodules) {
@@ -78,6 +79,7 @@ def findFiles(FileCollection roots, String path) {
 // - pack.mcmeta
 //   - copied from the core module (I copy it here so I can do a blanket exclude later)
 task generateFiles(type: Sync) {
+    group = 'librarianlib'
     ext.genDir = "$buildDir/generated"
     def coreResources = project(":core").rootDir.path + '/src/main/resources'
     ext.coreModsToml = file("$coreResources/META-INF/mods.toml")
@@ -196,6 +198,7 @@ jar {
 }
 
 task obfJar(type: Jar) {
+    group = 'build'
     classifier = ''
     manifest.attributes(attributes)
     includeEmptyDirs = false
@@ -211,6 +214,7 @@ task obfJar(type: Jar) {
 }
 
 task deobfJar(type: Jar) {
+    group = 'build'
     classifier = 'deobf'
     manifest.attributes(attributes)
     includeEmptyDirs = false
@@ -226,6 +230,7 @@ task deobfJar(type: Jar) {
 }
 
 task sourcesJar(type: Jar) {
+    group = 'build'
     classifier = 'sources'
     manifest.attributes(attributes)
     includeEmptyDirs = false
